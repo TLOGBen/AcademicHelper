@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.coverage
+.pytest_cache/
+.agent-workspace/
+docs/SEMANTIC_SCHOLAR_*.md
+*.egg-info/
+dist/
+build/
+uv.lock

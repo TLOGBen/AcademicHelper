@@ -1,0 +1,9 @@
+{
+  "name": "academic-helper",
+  "version": "0.1.0",
+  "description": "Academic research assistant — literature search, gap discovery, content evaluation for thesis writing",
+  "author": {
+    "name": "TLOGBen"
+  },
+  "repository": "https://github.com/TLOGBen/AcademicHelper"
+}
