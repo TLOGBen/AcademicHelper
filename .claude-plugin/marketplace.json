@@ -1,0 +1,16 @@
+{
+  "name": "academic-helper-marketplace",
+  "owner": {
+    "name": "TLOGBen"
+  },
+  "metadata": {
+    "description": "Academic research tools for thesis writing — literature search, gap discovery, content evaluation"
+  },
+  "plugins": [
+    {
+      "name": "academic-helper",
+      "source": ".",
+      "description": "Academic research assistant — literature search, gap discovery, content evaluation for thesis writing"
+    }
+  ]
+}
