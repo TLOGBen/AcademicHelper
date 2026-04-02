@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "academic-helper",
-      "source": ".",
+      "source": "./",
       "description": "Academic research assistant — literature search, gap discovery, content evaluation for thesis writing"
     }
   ]
