@@ -1,8 +1,5 @@
 """Tests for AcademicHelper server infrastructure."""
 
-import importlib
-
-
 def test_package_imports():
     """Package should be importable and expose __version__."""
     import academic_helper
@@ -41,3 +38,12 @@ def test_server_has_main():
     from academic_helper.server import main
 
     assert callable(main)
+
+
+def test_committee_tool_registered():
+    """prepare_review_context is registered as an MCP tool."""
+    from academic_helper.server import create_server
+
+    server = create_server()
+    tool_names = list(server._tool_manager._tools.keys())
+    assert "prepare_review_context" in tool_names

@@ -10,10 +10,12 @@ def create_server() -> FastMCP:
     from .tools.search import register as reg_search
     from .tools.gaps import register as reg_gaps
     from .tools.evaluate import register as reg_evaluate
+    from .tools.committee import register as reg_committee
 
     reg_search(mcp)
     reg_gaps(mcp)
     reg_evaluate(mcp)
+    reg_committee(mcp)
     return mcp
 
 

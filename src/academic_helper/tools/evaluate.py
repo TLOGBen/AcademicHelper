@@ -12,6 +12,7 @@ from academic_helper.models.evaluation import AgentSpec
 
 # Patchable in tests
 _agents_dir: Path = Path(__file__).parent.parent / "agents"
+AGENTS_DIR: Path = _agents_dir
 
 _REQUIRED_FIELDS = ("name", "display_name", "focus", "scoring_dimensions", "prompt_template")
 
@@ -107,7 +108,7 @@ def select_committee(
     return tuple(sorted(selected, key=lambda a: a.name))
 
 
-def _domain_profile_for(domain: str) -> DomainProfile:
+def domain_profile_for(domain: str) -> DomainProfile:
     """Return a DomainProfile for the given field name string."""
     if domain == NURSING_TW.field:
         return NURSING_TW
@@ -129,7 +130,7 @@ def evaluate_paper(
     Does NOT call an LLM — returns structured metadata for downstream use.
     """
     agents = load_all_agents(_agents_dir)
-    profile = _domain_profile_for(domain)
+    profile = domain_profile_for(domain)
     committee = select_committee(profile, agents)
 
     committee_members = [
