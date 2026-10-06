@@ -5,7 +5,7 @@ The skill lives in `.agents/skills/pico-literature-search/`. Repository skills a
 ## Create the environment
 
 1. Choose **Work in > Cloud > Select environment > Create environment**, or open **Settings > Codex Cloud > Environments**.
-2. Select `TLOGBen/AcademicHelper`. Use the branch containing the skill, or merge the reviewed change before creating an environment from the default branch.
+2. Select `TLOGBen/AcademicHelper`. For the proposed version in PR #1, ask setup to load `codex/pico-literature-cloud`; after review and merge, the default branch can be used instead. Do not assume an unmerged PR is already in `main`.
 3. Ask setup to prepare Python 3.11+, Node, and the available spreadsheet runtime. The new Python helper uses only the standard library; the existing AcademicHelper MCP server has its own dependencies in `pyproject.toml`.
 4. Allow the API hosts `eutils.ncbi.nlm.nih.gov`, `pmc-oa-opendata.s3.amazonaws.com`, and `api.openalex.org`. Add official publication hosts as needed for source research. Package-manager-only access is insufficient for literature API requests.
 5. Run the checks below, review the setup report, and publish only after its required outputs are verified. Publishing captures the prepared environment for new tasks.
