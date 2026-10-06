@@ -9,3 +9,6 @@ docs/SEMANTIC_SCHOLAR_*.md
 dist/
 build/
 uv.lock
+
+# Literature search task outputs are saved separately, not committed by default.
+outputs/
