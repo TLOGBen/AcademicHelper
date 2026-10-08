@@ -104,4 +104,4 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 
 ## 0.2.0 驗證範圍
 
-2026-10-08 的更新通過 400 項主程式測試、20 項 Zotero 與 13 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。
+2026-10-08 的更新通過 400 項主程式測試、20 項 Zotero 與 15 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。

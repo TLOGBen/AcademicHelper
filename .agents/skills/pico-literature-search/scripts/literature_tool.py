@@ -336,15 +336,20 @@ def existing_pdf_path(record, out=None):
     return None
 
 
+_MISSING_PDF_STATUS = "本地 PDF 不存在、不可讀或檔頭無效，待重新取得"
+
+
 def refresh_pdf_paths(records, out):
     """Keep usable paths and retain stale locations without marking them ready."""
     for record in records:
         existing = existing_pdf_path(record, out)
         if existing is not None:
             record["pdf_path"] = str(existing)
+            if record.get("pdf_status") == _MISSING_PDF_STATUS:
+                record["pdf_status"] = "已有本地 PDF（已恢復）"
         elif record.get("pdf_path"):
             record["pdf_missing_path"] = record.pop("pdf_path")
-            record["pdf_status"] = "本地 PDF 不存在、不可讀或檔頭無效，待重新取得"
+            record["pdf_status"] = _MISSING_PDF_STATUS
 
 
 def download_pmc(r, client, out):

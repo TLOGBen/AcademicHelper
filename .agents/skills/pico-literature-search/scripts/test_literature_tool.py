@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority, enrich_citations, refresh_pdf_paths, prepare_pdfs
+from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority, enrich_citations, refresh_pdf_paths, prepare_pdfs, record_row
 
 
 class ToolTests(unittest.TestCase):
@@ -91,6 +91,39 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(record['pdf_missing_path'], str(pdf))
             self.assertIn('待重新取得', record['pdf_status'])
             self.assertEqual(missing_pdf_priority([record], out=folder)[0]['title'], 'Retained paper')
+
+    def test_restored_pdf_updates_exported_status_and_preserves_missing_location(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            pdf = out / 'restored.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            for workflow in ('rank', 'import'):
+                with self.subTest(workflow=workflow):
+                    record = dict(title='Restored paper', pdf_path='deleted.pdf')
+                    refresh_pdf_paths([record], out)
+                    self.assertEqual(len(missing_pdf_priority([record], out=out)), 1)
+                    record['pdf_path'] = 'restored.pdf'
+                    if workflow == 'rank':
+                        refresh_pdf_paths([record], out)
+                    else:
+                        prepare_pdfs([record], None, out, 0)
+                    self.assertEqual(record['pdf_status'], '已有本地 PDF（已恢復）')
+                    self.assertEqual(record_row(1, record)[13], record['pdf_status'])
+                    self.assertEqual(record['pdf_path'], str(pdf.resolve()))
+                    self.assertEqual(record['pdf_missing_path'], 'deleted.pdf')
+                    self.assertEqual(missing_pdf_priority([record], out=out), [])
+                    refresh_pdf_paths([record], out)
+                    self.assertEqual(record['pdf_status'], '已有本地 PDF（已恢復）')
+
+    def test_refresh_retains_valid_pdf_download_provenance(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            pdf = out / 'retained.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            record = dict(title='Downloaded paper', pdf_path='retained.pdf',
+                          pdf_status='已下載（PMC 官方雲端）')
+            refresh_pdf_paths([record], out)
+            self.assertEqual(record['pdf_status'], '已下載（PMC 官方雲端）')
 
     def test_relative_manifest_pdf_is_resolved_from_output_not_workspace(self):
         with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder, tempfile.TemporaryDirectory(dir=Path.cwd()) as unrelated:
