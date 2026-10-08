@@ -1,0 +1,105 @@
+{
+  "topic": "GSEOH 日文原版翻譯為臺灣繁體中文版：社區老人跨文化調適與心理計量驗證",
+  "pico": {
+    "P": "臺灣社區高齡者；暫以 65 歲以上規劃，實際納入條件待研究計畫確認",
+    "I": "GSEOH 以日文原版為基礎翻譯、回譯、文化調適及語意等值檢核",
+    "C": "非必要；可於效度研究選擇相關構念量表，搜尋不強制加入比較組",
+    "O": "內容效度、結構效度、內部一致性、重測信度、測量誤差及跨文化效度"
+  },
+  "instrument_terms": [
+    "GSEOH",
+    "Geriatric Self-Efficacy Scale for Oral Health",
+    "Geriatric Oral Health Self-Efficacy"
+  ],
+  "oral_terms": [
+    "oral",
+    "dental",
+    "oral health"
+  ],
+  "efficacy_terms": [
+    "self efficacy",
+    "self-efficacy"
+  ],
+  "method_terms": [
+    "scale*",
+    "questionnaire*",
+    "instrument*",
+    "psychometr*",
+    "valid*",
+    "reliab*",
+    "translat*",
+    "cross-cultural",
+    "cross cultural",
+    "cultural adaptation",
+    "adaptation",
+    "measurement invariance",
+    "factor analys*",
+    "test retest",
+    "internal consistency",
+    "content validity",
+    "cognitive interview*"
+  ],
+  "population_terms": [
+    "older adult*",
+    "older people",
+    "elderly",
+    "geriatric*",
+    "aged",
+    "senior*"
+  ],
+  "translation_terms": [
+    "translat*",
+    "cross-cultural",
+    "cross cultural",
+    "cultural adaptation",
+    "linguistic",
+    "equivalence",
+    "back translation",
+    "cognitive interview*"
+  ],
+  "context_terms": [
+    "community-dwelling",
+    "community dwelling",
+    "community living",
+    "independent living",
+    "community"
+  ],
+  "locale_terms": [
+    "Taiwan",
+    "Taiwanese",
+    "Chinese",
+    "Mandarin",
+    "traditional Chinese"
+  ],
+  "seed_pmid": "27531046",
+  "supplemental_records": [
+    {
+      "title": "老年人口腔健康相關自我效能量表的漢化及信效度檢驗",
+      "year": 2021,
+      "authors": "徐宇馨；吳紅梅；馬駿馳；張光東",
+      "journal": "護理研究 35(16):2858–2863",
+      "doi": "10.12102/j.issn.1009-6493.2021.16.007",
+      "url": "https://hlyj.suo1.cn/thesisDetails#10.12102/j.issn.1009-6493.2021.16.007&lang=zh",
+      "kind": "GSEOH 簡體中文版翻譯驗證",
+      "source": "公開官方來源（範例人工補入，需本次查核）"
+    },
+    {
+      "title": "老年人口腔健康自我效能量表的漢化及信效度檢驗",
+      "year": 2021,
+      "authors": "王晗；程侶；寧允；李文姣；金昌德",
+      "journal": "中華老年口腔醫學雜誌 19(4):225–228,236",
+      "doi": "10.19749/j.cn.cjgd.1672-2973.2021.04.008",
+      "url": "https://zhkq.cbpt.cnki.net/portal/journal/portal/client/paper/0fdd458ce79ede3ac1f939b8815e723f",
+      "kind": "GSEOH 簡體中文版翻譯驗證",
+      "source": "公開官方來源（範例人工補入，需本次查核）"
+    },
+    {
+      "title": "KAKEN 15K20637 研究成果報告（含 GSEOH 日文 20 題）",
+      "authors": "Ohara, Yuki",
+      "journal": "日本科研費研究成果報告",
+      "url": "https://kaken.nii.ac.jp/file/KAKENHI-PROJECT-15K20637/15K20637seika.pdf",
+      "kind": "研究報告／原題目來源（非原始期刊論文）",
+      "source": "公開官方來源（範例人工補入，需本次查核）"
+    }
+  ]
+}

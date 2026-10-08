@@ -53,6 +53,19 @@ $env:UV_NO_SYNC = "true"
 
 本次 Cloud 的三個來源請求皆收到 proxy CONNECT 403，即時搜尋尚未驗證成功。請在 Cloud 環境設定增補所需網域，保留既有白名單；設定實際生效後再測試。儲存待審設定、目前機器的執行狀態及發布環境是不同步驟，儲存 draft 不會立即變更網路或完成發布。
 
+## PICO 文獻搜尋 skill
+
+[.agents/skills/pico-literature-search/SKILL.md](.agents/skills/pico-literature-search/SKILL.md) 提供 PICO／量表研究的搜尋策略、PubMed 書目取回、PMC 開放全文 PDF、RIS 匯入、閱讀清單與待取得全文排序。Cochrane／Google Scholar 使用各平台搜尋與匯出，不執行批次網頁擷取。引用次數不代表研究品質；COSMIN 評級需要對應測量特性的可靠證據。
+
+Python helper 只需 standard library。Excel 匯出另需 Node 與 `@oai/artifact-tool`；在 Cloud 使用實際 runtime 路徑設定 `CODEX_NODE`／`CODEX_NODE_MODULES`。即時搜尋與 PDF 需要 `eutils.ncbi.nlm.nih.gov`、`pmc-oa-opendata.s3.amazonaws.com`；引用查核另用 `api.openalex.org`。
+
+```sh
+uv run --no-sync python -m unittest discover -s .agents/skills/pico-literature-search/scripts -p test_literature_tool.py -v
+uv run --no-sync python .agents/skills/pico-literature-search/scripts/literature_tool.py plan --out outputs/plan_check
+```
+
+詳見 [Cloud 安裝與驗證](docs/codex-cloud-literature.md)。離線 plan／模擬匯出不等於已執行資料庫搜尋。搬移 manifest 或刪除 PDF 後，先核對檔案路徑；目前 rank 仍會將非空 pdf_path 視為已有全文，可能漏列待取得全文項目。
+
 ## Zotero 環境設定 skill
 
 本 repository 的正式來源是 [.agents/skills/setup-zetero/SKILL.md](.agents/skills/setup-zetero/SKILL.md)。skill 名稱保留為 `setup-zetero`，服務名稱為 Zotero。helper 僅使用 Python standard library，檢查以下變數：
