@@ -1,6 +1,6 @@
 [project]
 name = "academic-helper"
-version = "0.3.0"
+version = "0.3.1"
 description = "Academic research assistant — literature search, gap discovery, content evaluation"
 requires-python = ">=3.11"
 dependencies = [

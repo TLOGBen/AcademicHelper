@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AcademicHelper research delivery",
+  "type": "object",
+  "required": ["schema_version", "purpose", "status", "updated_at", "primary", "artifacts", "limitations"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "purpose": {"type": "string", "minLength": 1, "maxLength": 100},
+    "status": {"enum": ["ready", "partial", "failed"]},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "primary": {"type": ["string", "null"]},
+    "artifacts": {"type": "array", "maxItems": 30, "items": {"type": "string"}},
+    "limitations": {"type": "array", "maxItems": 10, "items": {"type": "string", "maxLength": 500}}
+  },
+  "allOf": [{
+    "if": {"properties": {"status": {"enum": ["ready", "partial"]}}},
+    "then": {"properties": {"primary": {"type": "string", "minLength": 1}}}
+  }]
+}

@@ -51,7 +51,11 @@ installation.md、project-init.md、output-layout.md 與 tools.md 完成適合�
 
 每個研究專案以 **研究入口.md** 為固定入口，助手會連到各流程最新可用的報告、閱讀清單與修稿成果。較大任務保存在 `outputs/成果/<任務>/`，全文、表格與相關檔案一起保留；舊版本與人工筆記不因重跑消失。你不需依 skill 名稱或日期翻找，直接從入口開啟成果即可。
 
-這是助手遵循的交付規則，由助手建立與維護入口；既有資料保留原位，簡單問答不強制產生檔案。詳細規則見 [成果資料夾設計](doc/output-layout.md)。
+0.3.1 的 hooks／助手 helper 依明確交付紀錄維護入口；助手核對研究內容與完成範圍。既有資料保留原位，簡單問答不強制產生檔案。詳細規則見 [成果資料夾設計](doc/output-layout.md)。
+
+## 接續研究與成果 hooks
+
+Claude Code 與支援 hooks 的 Codex plugin 提供 `SessionStart` 接續研究、`PostToolUse` 更新成果入口。兩方使用各自設定及 Windows 命令，共用整理程式；保存人工段落，最新失敗時保留前次可用成果。安裝助手會檢查版本、載入與必要的 host 信任。只安裝個別 skills 時，由助手直接維護相同入口。詳見 [hooks 與交付登記](doc/hooks.md)。
 
 ## 開發環境
 
@@ -168,6 +172,10 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 此 skill 負責環境設定與診斷。0.3.0 新增的 `zotero-library` 與九個 Zotero MCP 工具負責文庫搜尋、分類／標籤、讀取已同步 PDF 註解、AI 筆記／引用註釋及 DOI journalArticle 書目匯入。寫入預設先預覽，保留人工內容並檢查版本衝突。詳見 [Zotero MCP 使用與限制](doc/zotero-mcp.md)。
 
 PDF 註解寫入、附件下載／上傳、其他書目類型的完整入庫仍不在本版 MCP 中；另行安裝的 `zotero-literature-import` 可依其實際能力處理。該 skill 尚未安裝於此 checkout，本次 Cloud 未驗證真實 Zotero 認證或寫入。
+
+## 0.3.1 驗證範圍
+
+新增兩方 plugin hooks、共用交付 helper 與 Codex manifest。26 項檔案／hook 測試通過，涵蓋人工內容保留、失敗不取代成果、依用途整理成果、原子更新、鎖定與安全路徑；實際 Unix 命令及 Codex output schemas 另行核對。Windows 與完整 host 事件載入仍待該環境實測，不能將 helper 成功當成 plugin 已啟用。
 
 ## 0.3.0 驗證範圍
 

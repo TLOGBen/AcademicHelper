@@ -1,0 +1,22 @@
+{
+  "description": "接續研究進度，依明確交付紀錄維護成果入口",
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "uv run --no-project --no-python-downloads python \"${PLUGIN_ROOT}/scripts/research_hooks.py\" hook",
+        "commandWindows": "uv run --no-project --no-python-downloads python \"%PLUGIN_ROOT%\\scripts\\research_hooks.py\" hook",
+        "timeout": 10
+      }]
+    }],
+    "PostToolUse": [{
+      "matcher": "apply_patch|exec_command|write_stdin|Bash|Write|Edit|MultiEdit",
+      "hooks": [{
+        "type": "command",
+        "command": "uv run --no-project --no-python-downloads python \"${PLUGIN_ROOT}/scripts/research_hooks.py\" hook",
+        "commandWindows": "uv run --no-project --no-python-downloads python \"%PLUGIN_ROOT%\\scripts\\research_hooks.py\" hook",
+        "timeout": 10
+      }]
+    }]
+  }
+}

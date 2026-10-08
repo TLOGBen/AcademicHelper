@@ -34,6 +34,8 @@
 
 既有 `zotero-literature-import` 由本機流程另行維護，目前不在本 repository。不要刪除、覆蓋或宣稱已隨本 plugin 安裝，也不要另造一套 setup-zetero。
 
+Codex 若支援 plugin 安裝，可使用 `.codex-plugin/plugin.json` 載入同一份八個 skills、MCP 與 Codex hooks；僅複製 User skills 不會載入 plugin hooks。安裝助手須依 [hooks 指南](hooks.md) 核對 host 支援、載入結果及必要信任介面，不繞過信任。
+
 ## 3. 準備 runtime 與 MCP
 
 Python 最低 3.11，建議 3.12。PICO 與 Zotero Python helpers 使用 standard library，單獨使用不需要啟動 MCP；MCP 使用 `pyproject.toml` 的依賴。有可用 lock 時依其安裝；本 repository 忽略 `uv.lock`，未有 lock 時不得聲稱鎖定依賴。從 repo 根目錄執行：
