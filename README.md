@@ -22,6 +22,36 @@ AcademicHelper 協助研究者找文獻、整理證據、選研究方向、規�
 
 以下是助手與維護者的安裝／執行資訊。Python 服務使用 MCP stdio；`agents/` 與 `skills/` 提供評審角色與流程，MCP 工具本身不呼叫 LLM。
 
+## 把這一段貼給你的 AI
+
+不需要先懂安裝或選工具。把下面整段貼給有檔案與命令執行能力的 AI 助手，它會讀取專案內的操作文件並協助完成；只有聊天能力的 AI 可以說明流程，但無法代為安裝。
+
+```text
+請幫我安裝並開始使用 AcademicHelper：
+https://github.com/TLOGBen/AcademicHelper
+
+先取得 main 的實際 commit，讀取該版本的 doc/README.md，再依其中的
+installation.md、project-init.md、output-layout.md 與 tools.md 完成適合我環境的安裝、
+研究專案初始化及必要驗證。若本機已有安裝，先比對並保留我的修改、
+研究檔案及其他 skills；全部元件使用同一版本。
+
+請由你處理命令、設定、依賴與檔案，只在必要的研究選擇或帳號授權時
+請我操作。Zotero key 只從 ZOTERO_API_KEY 讀取，不要請我貼在聊天，
+也不要寫進專案或設定檔。不需要為安裝試寫 Zotero 資料。
+
+沿用我們已討論的研究題目；若還沒有，先問我想研究什麼。
+最後用簡單中文告訴我：安裝了什麼、驗證了什麼、成果在哪裡、
+是否需要重啟，以及我可以直接說的第一個研究指令。
+```
+
+助手的正式入口：[doc/README.md](doc/README.md)。`doc/` 是 repository 內的文件目錄，不是 `/doc` 聊天命令，也不會自行安裝工具。
+
+## 產出的檔案在哪裡？
+
+每個研究專案以 **研究入口.md** 為固定入口，助手會連到各流程最新可用的報告、閱讀清單與修稿成果。較大任務保存在 `outputs/成果/<任務>/`，全文、表格與相關檔案一起保留；舊版本與人工筆記不因重跑消失。你不需依 skill 名稱或日期翻找，直接從入口開啟成果即可。
+
+這是助手遵循的交付規則，由助手建立與維護入口；既有資料保留原位，簡單問答不強制產生檔案。詳細規則見 [成果資料夾設計](doc/output-layout.md)。
+
 ## 開發環境
 
 建議使用 Python 3.12 與 [uv](https://docs.astral.sh/uv/)。從 repository 根目錄執行；Cloud task 已隔離，直接使用現有 checkout，除非明確需要，不另建 Git worktree。

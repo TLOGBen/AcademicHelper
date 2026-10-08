@@ -36,7 +36,7 @@ PubMed 與 E-utilities `db=pubmed` 是同一來源，合併去重。Cochrane 的
 
 ## 執行與取得 PDF
 
-讀 [references/execution.md](references/execution.md) 取得 schema、命令及支援界線。`load_workspace_dependencies` 可用時用來找 bundled Python／Node；沒有此工具時用 shell 查 Python／Node 與實際 runtime，不因此停止。Excel 匯出前驗證 `@oai/artifact-tool` 可解析，必要時設定 `CODEX_NODE`／`CODEX_NODE_MODULES`。成果存目前工作區 `outputs/`，不寫入已安裝 skill。
+讀 [references/execution.md](references/execution.md) 取得 schema、命令及支援界線。`load_workspace_dependencies` 可用時用來找 bundled Python／Node；沒有此工具時用 shell 查 Python／Node 與實際 runtime，不因此停止。Excel 匯出前驗證 `@oai/artifact-tool` 可解析，必要時設定 `CODEX_NODE`／`CODEX_NODE_MODULES`。成果存研究工作區的 `outputs/成果/<任務>/`，明確指定 `--out`，不寫入已安裝 skill。
 
 由你產生本次設定、選擇適當取回上限並執行 helper；命令與參數見操作文件，不要求研究者修改 JSON、挑 query ID 或設定 runtime。
 Helper 處理 PubMed ESearch／EFetch、去重、PMC Cloud PDF 與 Excel；不會自動研究任意中文 PICO。概念解讀、英文化、同義詞及新主題平台語法由 skill 執行代理依來源研究後生成。
@@ -64,3 +64,11 @@ XLSX 套用可用的 spreadsheets 技能及 bundled artifact-tool，保留題名
 主回覆只連到主要閱讀入口與研究報告，簡述實際整理／全文進度及會影響判斷的重要缺項。Excel 供篩選與筆記；缺少匯出能力時先交可用 CSV 和閱讀入口並說明 Excel 待補，不用不存在的檔案連結宣稱完成。策略任務只交策略報告和可用平台入口，明確說尚未執行搜尋。
 
 設定檔、原始回應與詳細查詢仍保留供查核，不要求研究者先理解其用途。取得不到的全文仍保存書目與入口，由你整理最值得補取得的清單；需機構登入、作者授權或付費時再讓使用者選擇，不自動購買或寄信。已有閱讀筆記與納入決定先保存、合併再更新成果，不要求研究者手動重建同一份清單。
+
+## 產出資料夾與成果入口
+
+沿用同一研究工作區，所有檔案寫在研究工作區內，不寫入已安裝 skill。根目錄的 `研究入口.md` 是固定入口；`outputs/成果/README.md` 依研究用途連到各流程「最新可用」的成果，並標示日期、實際完成範圍與待補項目。入口僅連到真實存在且已核對的檔案，尚未產生的內容用文字標待完成。
+
+每次較大任務使用新的 `outputs/成果/<YYYYMMDD-HHMMSS-用途>/`，撞名時加序號；報告採容易辨識的名稱，例如 `研究摘要.md`、`研究方向.md`、`可行性計畫.md`、`修稿與口試.md`。全文、清單與 helper 的相依檔案保留完整 bundle，不移動單一檔案以免破壞連結；原始資料／manifest／診斷留在任務內的工具子目錄。PICO 必須明確 `--out` 指向這個新任務目錄，閱讀入口連到其 `開始閱讀.html`；只有策略時連到 `搜尋式.html`，不冒充完成搜尋。
+
+更新成果時保留舊版與人工筆記，不覆蓋或刪除；最新一次失敗不能取代仍可用的成果，入口同時說明失敗／部分完成狀態。既有其他資料夾保留原位，用相對連結納入入口，不要求研究者搬檔。簡單回答、setup 診斷不強制另建空資料夾；需要保存時只記錄不含憑證／私有回應的簡短狀態。交付先給「研究入口」及本次主要成果，最多三個主連結，其餘由入口導覽；跨電腦交付前核對可攜檔案與連結。
