@@ -1,63 +1,64 @@
 ---
 name: setup-zetero
-description: 設定與診斷 Zotero 文獻工作流程的環境變數、Cloud 網路與唯讀 API 存取；適用於首次設定、換機、Cloud 啟動或 Zotero 認證失敗。
+description: 幫使用者連接 Zotero 並自動檢查文庫；適合不熟悉技術的人員。沿用已有授權，代為處理環境設定、文庫識別與連線問題，只在必要時引導使用者完成安全授權或選擇文庫。
 ---
 
-# Zotero 環境設定
+# 幫我連接 Zotero
 
-沿用 `setup-zetero` 這個 skill 名稱；服務名稱是 Zotero。設定完成後交接給既有的 `zotero-literature-import`，不另建入庫實作。預設以繁體中文回報。
+你負責把 Zotero 設定好，使用者只需說明要使用哪個文庫，並在必要時完成帳號授權。預設繁體中文、短句與日常用語。skill 名稱保留 `setup-zetero`；服務是 Zotero。
 
-## 確認環境與憑證來源
+## 對使用者的互動
 
-- 使用現有 checkout；Cloud task 已隔離，除非使用者要求，不建立 Git worktree。
-- 沿用使用者指定的 library 與既有認證。先查可用環境設定中的綁定名稱，再以 helper 檢查本機變數是否存在；不要列出整個環境、輸出 key 或讀出個人設定檔內容。
-- API key 只讀 `ZOTERO_API_KEY`。程序環境值優先；Windows 可在程序變數不存在時讀取持久化的個人 User 環境值。Linux／Cloud 只讀目前程序環境。
-- Library 使用 `ZOTERO_LIBRARY_ID`（正整數）與 `ZOTERO_LIBRARY_TYPE`（`user` 或 `group`，預設 `user`）。ID 與 type 可回報；key 只回報是否設定。
-- Windows User 環境變數不會自動同步至 Cloud。Cloud 缺 key 時，請使用者在環境／個人 vault 的安全輸入介面提供 `ZOTERO_API_KEY`，不得要求貼在聊天、從其他聊天複製 key，或存入 repository、腳本、skill、安裝紀錄。
-- 不因 token 變數未設定就重複新增認證。若平台提供代理綁定，使用其支援的 HTTPS 路由並實測；placeholder 不等同失效 key。
+- 先動手檢查已有設定與授權，沿用對話中的選擇，不要求重新填表或先閱讀技術文件。
+- 命令、Python、環境變數、library ID/type、HTTP 狀態與診斷 JSON 都由你處理。對使用者說「連接授權」「我的文庫」「群組文庫」「連線檢查」即可；使用者主動要求技術細節時再提供。
+- 能自行完成的設定、安裝與唯讀檢查直接完成。每次只提出目前必要的一個動作，不把排錯清單、命令或整份設定交給使用者。
+- 說明需要哪個動作及完成後能做什麼。不能安全代做的帳號登入／授權，提供實際可用的連結或安全輸入位置；不聲稱已建立不存在的按鈕、視窗或登入流程。
+- 完成後先說結果和下一步用途，通常 2–3 句。不把測試數、變數名稱或網路政策當作一般使用者的完成通知。
 
-## 執行設定與檢查
+## 助手執行流程
 
-Helper 位於此 skill 的 `scripts/zotero_doctor.py`，只使用 Python standard library。以可用的 Python 3.11+ 執行，將下列 `<skill_dir>` 換成這份 `SKILL.md` 所在目錄：
+讀 [references/execution.md](references/execution.md)，其中是給助手的工具、命令與狀態處理；不要要求使用者照著執行。
 
-```text
-python <skill_dir>/scripts/zotero_doctor.py --check-env
-python <skill_dir>/scripts/zotero_doctor.py
-```
+### 1. 檢查現況並沿用目標
 
-第一個命令不發送網路請求，只確認必要變數與格式。第二個命令以 verified HTTPS 對官方 `api.zotero.org` 執行唯讀 GET，確認 key metadata 與所選 library 的讀取存取。實際 library 回應成功才宣稱連線有效；存在變數本身不足以證明有效認證。不要使用示範 key 作真實請求。
+使用實際可用的環境／安全綁定工具與 doctor 檢查。只讀需要的 Zotero 設定，不列印整個環境或憑證內容。已有可用目標就直接驗證，避免重問「本機或 Cloud」「文庫編號」等已知資訊。
 
-缺少設定時繼續可獨立完成的安裝與驗證，再提供精確缺項。需要保存 Cloud 設定時，使用可用的設定工具增補變數需求與 `api.zotero.org` 網路需求，不寫入 key 值、不覆蓋未知白名單。保存 draft 不會套用 runtime 或發布環境；等設定實際生效後重測。
+未指定目標時，按已有對話與設定推知。仍無法判斷且會影響連接時，簡短問「要連接你的個人文庫，還是與別人共用的群組文庫？」；不讓使用者選 `user/group` 代碼。
 
-將 library ID/type 以非敏感變數設定；不要把這個 skill 的 library ID 固定為某位使用者。已有來源可推知 target 時直接沿用，只有無法推知且阻止進度時才詢問。
+### 2. 找到文庫，不要求查技術編號
 
-## 解讀結果並排除失敗
+- 個人文庫缺 ID 時，已有授權就由 doctor 的 `--discover-library` 從官方帳號回應查找。這只識別候選文庫；由你設定非敏感的 ID/type，再做實際文庫讀取檢查。不要把識別成功當連接完成。
+- 群組文庫沿用已知選擇；有工具能顯示群組名稱時提供可辨識的選項，否則請使用者提供 Zotero 群組頁面連結，由你解析／核對編號。多個可能目標不能任選第一個，也不能切換到個人文庫來掩蓋群組問題。
+- 自動查找受限時，先處理可修復的連線／權限問題，再給使用者一個有用的選擇或帳號操作。不要要求搜尋 API 文件或手動執行 GET。
 
-- 缺 key、缺 ID 或格式錯誤：補齊對應變數，不發網路請求。不要請使用者把 key 貼在聊天。
-- Proxy CONNECT 403：檢查環境的 `api.zotero.org` 網路規則與實際生效狀態；不要判定為失效 key。
-- Zotero HTTP 401／403：先分別確認認證與目標 library 權限；不要因單次失敗要求重建同一個 secret。
-- HTTP 429：保留 rate limit 結果，遵循 Retry-After；不要原樣連續重試。
-- TLS／網路錯誤：檢查平台代理與受信任憑證設定，不關閉 TLS 驗證。
-- API 格式／服務錯誤：保留狀態與已驗證範圍；不輸出 server response body，以免內容反射 key。
+### 3. 只在缺授權時引導安全授權
 
-Helper 不建立、修改、刪除書目、筆記、分類或 PDF；也不以 GET 驗證宣稱實際寫入成功。權限 metadata 可以幫助診斷，但寫入／附件上傳須由入庫工作流程依使用者授權另行驗證。
+已有可用授權就沿用，不重建 key。缺授權時，先準備可自動完成的環境與設定，再引導使用者完成唯一缺少的步驟：
 
-## 交接與重用
+1. 需要建立 Zotero 授權碼時，提供 [Zotero 授權設定](https://www.zotero.org/settings/keys/new)，說明選定文庫所需的權限；不索取密碼，也不要求對方先理解 API。
+2. 讓授權碼只進入實際可用的安全輸入介面。Cloud 使用環境設定中的安全值輸入；本機使用可用的安全設定／secret 工具。只有助手的設定介面需要知道欄位名 `ZOTERO_API_KEY`。
+3. **不要求在聊天貼授權碼，不讀出或複製其他聊天的 key，不寫入設定檔或腳本。** 若目前沒有可安全代做的介面，明說只剩授權需使用者操作，提供最短的安全操作路徑；不要假裝已完成。
 
-確認 `zotero-literature-import` 是否實際安裝，再交接相同環境變數介面。僅有這個 setup skill 不代表文獻搜尋、COSMIN 評讀、Excel 匯出或 PDF 入庫已就緒。
+授權進入環境後由你繼續檢查。不能等待非同步回覆的 host 才請使用者完成後回覆「好了」；可繼續檢查的 host 直接繼續，不反覆確認。
 
-在 AcademicHelper Cloud 中可使用：
+### 4. 完成設定、排錯與驗證
 
-```text
-/workspace/AcademicHelper/.venv/bin/python /workspace/AcademicHelper/.agents/skills/setup-zetero/scripts/zotero_doctor.py --check-env
-```
+由你定位 Python、執行 doctor、設定非敏感參數、處理可用的網路設定並核對結果。授權只從環境讀取；Windows 已存的個人環境值可沿用，但不會自動同步到 Cloud。
 
-維護者可執行唯讀模擬測試：
+設定保存與實際生效分開。如果 host 只能保存草稿，先完成全部可準備的內容，回報「設定已準備好，還需要在環境設定儲存並發布，才可進行連線檢查」。給出實際介面的最短操作；不要用保存草稿宣稱已連上。
 
-```text
-python -m unittest discover -s <skill_dir>/scripts -p test_zotero_doctor.py -v
-```
+連線失敗時由你分類與修復，使用者只收到與下一步有關的說明，例如：
 
-Windows 安裝同一版本時，從已核實的 branch／commit 複製整個 `setup-zetero` 目錄至使用者的 skills 目錄，保留既有修改與其他 skills；不要把 API key 或個人設定一併打包。專案與 User scope 安裝需來自同一份 repository 來源。
+- 網路阻擋：「目前環境還不能連到 Zotero；連線設定已準備好，套用後我會再檢查。」
+- 權限不足：「目前授權無法讀取這個文庫。請在 Zotero 授權設定勾選這個文庫的讀取權限。」
+- 暫時限流：「Zotero 暫時限制請求，我會依允許的時間再試。」只有能實際安排重試時才承諾自動重試；否則說明稍後才能繼續。
 
-完成時回報變數名稱、所選 library、實際 GET／模擬測試結果、保存的設定與缺項。清楚區分本機驗證、Cloud 驗證、設定保存、發布，以及尚未執行的匯入。
+保留 HTTPS 驗證、不連續重試、不將網路問題誤判為授權失效。只有所選文庫的實際唯讀 GET 成功，才說連接完成。
+
+### 5. 交付可使用的工具
+
+檢查 `zotero-literature-import` 是否已安裝；存在且設定相容時，沿用同一份授權交接，不要求使用者再設定一次。未安裝且使用者要求文獻入庫時，先完成可用的安裝／準備，無法取得工具才說明具體缺項。不要另建第二套入庫實作。
+
+完成訊息例如：「已連接你的 Zotero 個人文庫，讀取檢查成功。你現在可以請我整理文獻。」僅在實際可用入庫工具已就緒時才補充可將文獻／PDF 存入 Zotero。未就緒就明說下一個可完成的步驟，不讓使用者猜。
+
+此流程不建立或修改書目、筆記、分類或附件。連接成功不等於已搜尋、評讀或入庫；寫入由入庫工具依使用者要求執行並另行驗證。

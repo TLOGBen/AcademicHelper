@@ -87,6 +87,72 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(result["library"], {"id": "123456", "type": "user"})
         opener.assert_not_called()
 
+    def test_discovers_personal_library_without_requesting_an_id(self):
+        response = JsonResponse(payload={
+            'key': FAKE_KEY, 'userID': 123456, 'username': PRIVATE_LIBRARY_DATA,
+            'access': {'user': {'library': True}},
+        })
+        opener = MagicMock(return_value=response)
+        code, result, _ = self.run_main({'ZOTERO_API_KEY': FAKE_KEY}, ['--discover-library'], opener)
+        self.assertEqual(code, 0)
+        self.assertEqual(result['status'], 'library_discovered')
+        self.assertEqual(result['library'], {'id': '123456', 'type': 'user'})
+        self.assertFalse(result['config_valid'])
+        self.assertEqual(result['library_access']['status'], 'not_checked')
+        opener.assert_called_once()
+        request = opener.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://api.zotero.org/keys/current')
+        self.assertEqual(request.get_method(), 'GET')
+        self.assertIsNone(request.data)
+        self.assertTrue(response.closed)
+
+    def test_discovery_does_not_assume_personal_access_for_group_only_key(self):
+        response = JsonResponse(payload={
+            'userID': 123456, 'access': {'groups': {'987654': {'library': True}}},
+        })
+        code, result, _ = self.run_main({'ZOTERO_API_KEY': FAKE_KEY}, ['--discover-library'],
+                                      MagicMock(return_value=response))
+        self.assertEqual(code, 1)
+        self.assertEqual(result['status'], 'library_selection_required')
+        self.assertIsNone(result['library']['id'])
+
+    def test_discovery_respects_an_explicit_group_target(self):
+        opener = MagicMock()
+        code, result, _ = self.run_main(dict(ENV, ZOTERO_LIBRARY_TYPE='group'),
+                                      ['--discover-library'], opener)
+        self.assertEqual(code, 1)
+        self.assertEqual(result['status'], 'library_selection_required')
+        self.assertEqual(result['library']['type'], 'group')
+        opener.assert_not_called()
+
+    def test_discovery_rejects_invalid_user_ids_without_echoing_metadata(self):
+        for user_id in (None, True, 0, -1, '１２３', '../private', PRIVATE_LIBRARY_DATA):
+            with self.subTest(user_id=user_id):
+                response = JsonResponse(payload={
+                    'userID': user_id, 'access': {'user': {'library': True}},
+                })
+                code, result, _ = self.run_main({'ZOTERO_API_KEY': FAKE_KEY},
+                    ['--discover-library'], MagicMock(return_value=response))
+                self.assertEqual(code, 1)
+                self.assertEqual(result['status'], 'unexpected_response')
+                self.assertIsNone(result['library']['id'])
+
+    def test_discovery_missing_or_invalid_key_never_sends_requests(self):
+        for env in ({}, {'ZOTERO_API_KEY': FAKE_KEY + '\n'}):
+            with self.subTest(env_keys=list(env)):
+                opener = MagicMock()
+                code, result, _ = self.run_main(env, ['--discover-library'], opener)
+                self.assertEqual(code, 2)
+                self.assertEqual(result['status'], 'missing_config')
+                opener.assert_not_called()
+
+    def test_discovery_network_rejection_uses_sanitized_status(self):
+        opener = MagicMock(side_effect=URLError('Tunnel connection failed: 403 Forbidden'))
+        code, result, _ = self.run_main({'ZOTERO_API_KEY': FAKE_KEY}, ['--discover-library'], opener)
+        self.assertEqual(code, 1)
+        self.assertEqual(result['status'], 'network_policy')
+        self.assertEqual(result['library_access']['status'], 'not_checked')
+
     def test_invalid_config_does_not_make_requests_or_echo_values(self):
         for name, value in (
             ("ZOTERO_API_KEY", "secret\r\nInjected: value"),

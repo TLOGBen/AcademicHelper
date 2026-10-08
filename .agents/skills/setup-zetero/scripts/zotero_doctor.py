@@ -198,12 +198,25 @@ def _get(path: str, config: Config, opener: Callable, expected: str) -> dict:
                     payload = json.loads(body)
                 except (ValueError, UnicodeError, RecursionError):
                     return {"status": "unexpected_response", "http_status": status}
-                if expected == "key":
+                if expected in {"key", "personal_library"}:
                     valid = isinstance(payload, dict) and isinstance(payload.get("access"), dict)
                 else:
                     valid = isinstance(payload, list)
                 if not valid:
                     return {"status": "unexpected_response", "http_status": status}
+                if expected == "personal_library":
+                    user_access = payload["access"].get("user")
+                    if not isinstance(user_access, dict) or user_access.get("library") is not True:
+                        return {"status": "library_selection_required", "http_status": status}
+                    user_id = payload.get("userID")
+                    if isinstance(user_id, int) and not isinstance(user_id, bool):
+                        user_id = str(user_id)
+                    if not _library_id_valid(user_id):
+                        return {"status": "unexpected_response", "http_status": status}
+                    return {
+                        "status": "library_discovered", "http_status": status,
+                        "library": {"id": user_id, "type": "user"},
+                    }
                 return {"status": "ok", "http_status": status}
             return {"status": "http_error", "http_status": status}
     except (HTTPError, URLError, OSError, ssl.SSLError, socket.timeout) as error:
@@ -235,13 +248,31 @@ def check_access(config: Config, opener: Callable = _open) -> dict:
 
 def main(argv=None, *, environ=None, opener: Callable = _open) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--check-env", action="store_true", help="validate environment without network requests"
+    )
+    mode.add_argument(
+        "--discover-library", action="store_true",
+        help="discover a personal library ID with a read-only key metadata request; does not save it",
     )
     args = parser.parse_args(argv)
     environ = resolve_environment(environ)
     result = _metadata(environ)
     try:
+        if args.discover_library:
+            key = environ.get("ZOTERO_API_KEY", "")
+            if not key:
+                raise ConfigError(["ZOTERO_API_KEY is missing"])
+            if not _key_format_valid(key):
+                raise ConfigError(["ZOTERO_API_KEY must be an ASCII token without whitespace"])
+            if environ.get("ZOTERO_LIBRARY_TYPE", "user") != "user":
+                discovery = {"status": "library_selection_required"}
+            else:
+                discovery = _get("/keys/current", Config(key, "", "user"), opener, "personal_library")
+            result.update(discovery, config_valid=False, library_access={"status": "not_checked"})
+            print(json.dumps(result, ensure_ascii=True))
+            return 0 if result["status"] == "library_discovered" else 1
         config = build_config(environ)
     except ConfigError as error:
         result.update(

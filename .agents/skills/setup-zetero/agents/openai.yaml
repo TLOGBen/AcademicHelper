@@ -1,0 +1,4 @@
+interface:
+  display_name: "幫我連接 Zotero"
+  short_description: "自動檢查 Zotero 連線與文庫設定，只引導必要的安全授權操作"
+  default_prompt: "使用 $setup-zetero 幫我把 Zotero 連接好。請沿用已有設定，自動處理能完成的檢查與設定，只告訴我需要選擇文庫或安全授權的步驟。"

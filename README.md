@@ -71,9 +71,16 @@ uv run --no-sync python .agents/skills/pico-literature-search/scripts/literature
 
 詳見 [Cloud 安裝與驗證](docs/codex-cloud-literature.md)。離線 plan／模擬匯出不等於已執行資料庫搜尋。rank 會核對 PDF 是否實際可讀且檔頭有效；搬移或刪除後失效的路徑會保留為 `pdf_missing_path`，文章回到待取得清單。manifest 的相對 PDF 路徑依輸出目錄解析。
 
-## Zotero 環境設定 skill
+## 連接 Zotero
 
-本 repository 的正式來源是 [.agents/skills/setup-zetero/SKILL.md](.agents/skills/setup-zetero/SKILL.md)。skill 名稱保留為 `setup-zetero`，服務名稱為 Zotero。helper 僅使用 Python standard library，檢查以下變數：
+使用者只需說：「使用 $setup-zetero 幫我連接 Zotero。」助手會沿用已有授權、自動找個人文庫與檢查連線；只有需要群組選擇或安全授權時才引導操作，不要求執行命令、查文庫編號或學習環境變數。授權碼不要貼在聊天，請使用助手指出的安全輸入介面。
+
+正式來源是 [.agents/skills/setup-zetero/SKILL.md](.agents/skills/setup-zetero/SKILL.md)，skill 名稱保留為 `setup-zetero`。
+
+<details>
+<summary>助手與維護者：設定與測試細節</summary>
+
+一般使用者不需自行設定；完整流程見 [助手用設定與診斷](.agents/skills/setup-zetero/references/execution.md)。helper 僅使用 Python standard library，使用以下變數：
 
 | 變數 | 設定方式 |
 | --- | --- |
@@ -86,6 +93,8 @@ Cloud 請使用環境設定的安全輸入介面提供 key，並設定 ID/type�
 ```sh
 # 僅檢查變數存在與格式，不發送請求
 uv run --no-sync python .agents/skills/setup-zetero/scripts/zotero_doctor.py --check-env
+# 已有授權、缺個人文庫編號時：查找候選文庫（不保存或驗證文庫）
+uv run --no-sync python .agents/skills/setup-zetero/scripts/zotero_doctor.py --discover-library
 # 預設：對官方 api.zotero.org 執行唯讀 GET
 uv run --no-sync python .agents/skills/setup-zetero/scripts/zotero_doctor.py
 ```
@@ -100,8 +109,10 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 
 若需要安裝至本機 User scope，從同一個已確認的 branch／commit 複製完整 `setup-zetero` 資料夾至 `~/.codex/skills/setup-zetero`。先比對已存在的版本並保留本機修改與其他 skills；不要附帶憑證、個人 library 值或設定檔。
 
+</details>
+
 此 skill 負責環境設定與診斷。文獻匯入、PDF 入庫、評讀及 Excel 匯出由另一個聊天維護的 `zotero-literature-import` 工作流程處理；該 skill 尚未安裝於此 checkout，也尚未在這個 Cloud 驗證 Zotero 認證或匯入。
 
 ## 0.2.0 驗證範圍
 
-2026-10-08 的更新通過 400 項主程式測試、20 項 Zotero 與 15 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。
+2026-10-08 的更新通過 400 項主程式測試、26 項 Zotero 與 15 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。
