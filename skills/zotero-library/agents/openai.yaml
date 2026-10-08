@@ -1,0 +1,4 @@
+interface:
+  display_name: "整理我的 Zotero"
+  short_description: "整理文庫分類與標籤，將閱讀標記轉為有來源的筆記並保留人工內容"
+  default_prompt: "使用 $zotero-library，沿用我的研究題目整理 Zotero。請先看現有分類與閱讀標記，給我清楚的整理預覽，保留人工標籤與筆記。"

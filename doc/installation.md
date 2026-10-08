@@ -13,11 +13,11 @@
 | Host | 安裝方法 |
 | --- | --- |
 | Claude Code plugin | 使用 host 支援的 marketplace 安裝，或以 `claude --plugin-dir <repo 的絕對路徑>` 載入 checkout；先確認 client 的實際 CLI／版本支援 |
-| Codex repository skills | `.agents/skills/` 中兩個 skills 可由相應 host 探索；五個 `skills/` 不能假設會一併自動探索 |
+| Codex repository skills | `.agents/skills/` 中兩個 skills 可由相應 host 探索；六個 `skills/` 不能假設會一併自動探索 |
 | Codex 個人 skills | 用 host 的安裝能力，或把下列完整目錄安裝至其實際 User skill 根目錄（通常 `~/.codex/skills/`）；查實際路徑，不寫死使用者名稱 |
 | 其他 AI client | 先確認 skill 與 MCP 相容方式。可先讀正式 skill 並依流程工作；沒有安裝能力時不能宣稱已完成安裝 |
 
-需要安裝的七份正式來源：
+需要安裝的八份正式來源：
 
 | 來源目錄 | 安裝後名稱 |
 | --- | --- |
@@ -28,6 +28,7 @@
 | `skills/relevance/` | `relevance` |
 | `skills/can-this-work/` | `can-this-work` |
 | `skills/committee-review/` | `committee-review` |
+| `skills/zotero-library/` | `zotero-library` |
 
 安裝完整葉目錄，包括 `agents/`、`references/`、`assets/`、`scripts/`（存在時）。不要只複製 SKILL.md。已存在的同名 skill 先做差異比對；保留需要的本機修改，備份放在 active skill discovery 之外，以免載入重複版本。備份僅限非敏感 skill 檔案；憑證及個人設定不要帶入。逐檔比對來源與安裝結果，記錄保留的差異。
 
@@ -55,7 +56,7 @@ MCP 是 stdio 服務，沒有網站或監聽 port，不能以瀏覽器開啟 `lo
 }
 ```
 
-此為設定片段，不能直接以 placeholder 使用或覆蓋整個設定檔。MCP client 應完成 initialize、列出六個工具並呼叫 `expand_topics`；輸入參數以當次 schema 為準。僅成功啟動程序不代表 handshake 成功。有 client 重載／重啟需求時，先完成其他步驟，再告訴研究者最少必要操作。
+此為設定片段，不能直接以 placeholder 使用或覆蓋整個設定檔。MCP client 應完成 initialize、列出十五個工具（六個研究工具與九個 Zotero 工具）並呼叫 `expand_topics`；輸入參數以當次 schema 為準。僅成功啟動程序不代表 handshake 成功。有 client 重載／重啟需求時，先完成其他步驟，再告訴研究者最少必要操作。
 
 Excel 另需 Node 與相容的 `@oai/artifact-tool` 文件 runtime；Python 安裝不提供此套件。探索實際 runtime，必要時設定 `CODEX_NODE` 和 `CODEX_NODE_MODULES`。缺少時保留 HTML／CSV／JSON，使用實際可用的試算表工具完成 XLSX；未完成就標示，不偽造副檔名或宣稱完整交付。
 

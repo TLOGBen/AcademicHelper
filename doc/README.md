@@ -9,6 +9,7 @@
 | 安裝或更新 | [installation.md](installation.md) | 同一 commit 的元件可用；記錄已驗證及尚缺能力 |
 | 建立研究工作區 | [project-init.md](project-init.md) | 題目、證據、閱讀筆記與成果有清楚入口 |
 | 整理與交付檔案 | [output-layout.md](output-layout.md) | 固定入口連到目前可用成果，舊版與人工筆記仍保留 |
+| Zotero 分類、筆記與註解 | [zotero-mcp.md](zotero-mcp.md) | 沿用分類、保留人工內容、預覽及版本檢查 |
 | 執行研究工作 | [tools.md](tools.md) | 選對流程，交付可讀成果與來源，保留限制 |
 
 ## 共通操作原則

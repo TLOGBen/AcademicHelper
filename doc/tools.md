@@ -12,6 +12,7 @@
 | 評估能不能做 | [can-this-work](../skills/can-this-work/SKILL.md) | 最低可行方案、招募／方法／授權條件 |
 | 修論文與準備口試 | [committee-review](../skills/committee-review/SKILL.md) | 優先修改、有來源的評議與答辯練習 |
 | 找文獻與閱讀清單 | [pico-literature-search](../.agents/skills/pico-literature-search/SKILL.md) | 開始閱讀入口、實際可用 PDF、Excel／CSV |
+| 整理 Zotero 文庫與閱讀標記 | [zotero-library](../skills/zotero-library/SKILL.md) | 分類／標籤預覽、有來源的筆記與引用註釋 |
 | 連接 Zotero | [setup-zetero](../.agents/skills/setup-zetero/SKILL.md) | 安全授權、文庫選擇、唯讀連線診斷 |
 
 ## MCP：用 client 的實際 schema 呼叫
@@ -48,7 +49,9 @@ COSMIN 按測量特性與可查核證據評讀，未有證據保留待評。引�
 
 setup-zetero 只診斷環境與唯讀連線。按 [助手執行指南](../.agents/skills/setup-zetero/references/execution.md) 使用 `--check-env`、必要時 `--discover-library`、再執行預設 doctor；只有實際 library GET 成功才稱已連接。
 
-需要入庫時，先確認另行安裝的 `zotero-literature-import`、讀其正式指引並尊重使用者的寫入範圍。先準備查重／預覽，保留人工筆記與原始檔，依該流程處理部分失敗續跑。此 repository 不包含入庫 skill，GET 成功、書目成功與 PDF 上傳成功需分別回報。
+文庫搜尋、分類／標籤整理與 AI 筆記可使用本版九個 Zotero MCP 工具，按 [Zotero MCP 指南](zotero-mcp.md) 執行；PDF 註解僅讀取，不提供寫入。DOI journalArticle 書目可預覽／匯入。
+
+需要完整入庫／PDF 上傳時，先確認另行安裝的 `zotero-literature-import`、讀其正式指引並尊重使用者的寫入範圍。先準備查重／預覽，保留人工筆記與原始檔，依該流程處理部分失敗續跑。此 repository 不包含入庫 skill，GET 成功、書目成功與 PDF 上傳成功需分別回報。
 
 ## 成果驗收
 

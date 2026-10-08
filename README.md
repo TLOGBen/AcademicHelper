@@ -17,6 +17,7 @@ AcademicHelper 協助研究者找文獻、整理證據、選研究方向、規�
 | 幫我修論文並練習口試 | 優先修改、修稿建議、問題與回答依據 |
 | 幫我找文獻、整理 PDF 和閱讀清單 | 「開始閱讀」入口、實際可用全文與 Excel／CSV 清單 |
 | 幫我連接 Zotero | 助手完成可用設定與檢查，必要時引導安全授權 |
+| 幫我整理 Zotero 分類、標籤與註解 | 文庫整理預覽、有來源的閱讀／引用筆記，保留人工內容 |
 
 簡單問題直接回答；較大任務先給結論和成果入口，完整證據與方法紀錄保留供查核。原始文章、摘要與全文閱讀程度清楚標示，重大限制一併說明。跨流程沿用研究題目、文獻、筆記與決定，不需要重填資料或自己排除程式錯誤。詳見 [研究者使用體驗](docs/researcher-experience.md)。
 
@@ -80,6 +81,8 @@ uv run academic-helper
 | `evaluate_paper_tool` | 建立委員、完整角色 prompt、評估維度與 rubric，不自動評分 |
 | `prepare_review_context` | 預取文獻並建立含待評文章的評審上下文 |
 
+0.3.0 另提供九個 Zotero 工具，涵蓋文庫搜尋、分類／標籤、註解讀取、受保護的 AI 筆記與 DOI 書目匯入；完整列表見 [Zotero MCP](doc/zotero-mcp.md)。
+
 啟動驗證應完成 MCP initialize、列出上述工具，並成功呼叫 `expand_topics`。Cloud 設定時已驗證這個流程。
 
 八份 `agents/*.md` 是角色設定的正式來源：YAML 提供 focus／評估維度，Markdown 本文作為 prompt。checkout 載入與工作目錄無關，wheel 也包含相同角色。`committee-review` 使用工具回傳的 prompt；有子代理時獨立分工，無子代理時循序分析並標明流程。評審結果是模擬建議，不代表真實委員認可或標準化品質評級。
@@ -97,8 +100,9 @@ Claude Code 可透過本 repository 的 marketplace 安裝 `academic-helper` plu
 | `committee-review` | 有證據與限制的多角色口試模擬 |
 | `pico-literature-search` | 資料庫策略、PMC 全文與閱讀清單 |
 | `setup-zetero` | 助手代為連接與檢查 Zotero，必要時引導安全授權 |
+| `zotero-library` | 文庫搜尋、分類與標籤、PDF 註解讀取、AI 筆記與 DOI 書目匯入 |
 
-Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；五個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄；助手可先讀取正式來源並使用其流程，有安裝工具時代為完成對應安裝。名稱相同的本機版本先比對，保留未提交修改，不把目錄搬移或安裝命令交給一般研究者。
+Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；六個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄；助手可先讀取正式來源並使用其流程，有安裝工具時代為完成對應安裝。名稱相同的本機版本先比對，保留未提交修改，不把目錄搬移或安裝命令交給一般研究者。
 
 既有研究 skills 已移除固定年代與強制數字排名，按當下日期設定搜尋範圍，區分題名／摘要／全文、有限搜尋與完整回顧、缺口候選與驗證。COSMIN 按適用的測量特性評讀；引用數與期刊聲望不能替代品質。工具版本及最新規範須從實際來源確認。
 
@@ -161,7 +165,15 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 
 </details>
 
-此 skill 負責環境設定與診斷。文獻匯入、PDF 入庫、評讀及 Excel 匯出由另一個聊天維護的 `zotero-literature-import` 工作流程處理；該 skill 尚未安裝於此 checkout，也尚未在這個 Cloud 驗證 Zotero 認證或匯入。
+此 skill 負責環境設定與診斷。0.3.0 新增的 `zotero-library` 與九個 Zotero MCP 工具負責文庫搜尋、分類／標籤、讀取已同步 PDF 註解、AI 筆記／引用註釋及 DOI journalArticle 書目匯入。寫入預設先預覽，保留人工內容並檢查版本衝突。詳見 [Zotero MCP 使用與限制](doc/zotero-mcp.md)。
+
+PDF 註解寫入、附件下載／上傳、其他書目類型的完整入庫仍不在本版 MCP 中；另行安裝的 `zotero-literature-import` 可依其實際能力處理。該 skill 尚未安裝於此 checkout，本次 Cloud 未驗證真實 Zotero 認證或寫入。
+
+## 0.3.0 驗證範圍
+
+新增 Zotero 共用層、九個 MCP 工具與 `zotero-library` skill。原有主程式與新增 API 契約測試合計 434 項通過，另有一項實際 stdio handshake／工具探索／安全缺項回報測試通過。0.3.0 wheel 在 checkout 外能載入十五個工具與八份角色；八個 skills 與文件連結檢查通過。
+
+驗證涵蓋預覽不寫入、DOI 查重、分頁上限、批次部分失敗、人工內容／標籤保留、版本衝突、未知寫入結果、HTML 跳脫與安全錯誤。沒有真實 Zotero key，尚未驗證官方文庫讀寫或 PDF 註解相容性；本版不含 PDF 註解寫入與附件上傳。
 
 ## 0.2.0 驗證範圍
 
