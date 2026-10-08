@@ -1,6 +1,6 @@
 {
   "name": "academic-helper",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "協助研究者找文獻、整理 Zotero 與研究成果",
   "skills": [
     "./skills",

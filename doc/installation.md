@@ -13,11 +13,11 @@
 | Host | 安裝方法 |
 | --- | --- |
 | Claude Code plugin | 使用 host 支援的 marketplace 安裝，或以 `claude --plugin-dir <repo 的絕對路徑>` 載入 checkout；先確認 client 的實際 CLI／版本支援 |
-| Codex repository skills | `.agents/skills/` 中兩個 skills 可由相應 host 探索；六個 `skills/` 不能假設會一併自動探索 |
+| Codex repository skills | `.agents/skills/` 中兩個 skills 可由相應 host 探索；七個 `skills/` 不能假設會一併自動探索 |
 | Codex 個人 skills | 用 host 的安裝能力，或把下列完整目錄安裝至其實際 User skill 根目錄（通常 `~/.codex/skills/`）；查實際路徑，不寫死使用者名稱 |
 | 其他 AI client | 先確認 skill 與 MCP 相容方式。可先讀正式 skill 並依流程工作；沒有安裝能力時不能宣稱已完成安裝 |
 
-需要安裝的八份正式來源：
+需要安裝的九份正式來源：
 
 | 來源目錄 | 安裝後名稱 |
 | --- | --- |
@@ -29,12 +29,13 @@
 | `skills/can-this-work/` | `can-this-work` |
 | `skills/committee-review/` | `committee-review` |
 | `skills/zotero-library/` | `zotero-library` |
+| `skills/lit-comparison/` | `lit-comparison` |
 
 安裝完整葉目錄，包括 `agents/`、`references/`、`assets/`、`scripts/`（存在時）。不要只複製 SKILL.md。已存在的同名 skill 先做差異比對；保留需要的本機修改，備份放在 active skill discovery 之外，以免載入重複版本。備份僅限非敏感 skill 檔案；憑證及個人設定不要帶入。逐檔比對來源與安裝結果，記錄保留的差異。
 
 既有 `zotero-literature-import` 由本機流程另行維護，目前不在本 repository。不要刪除、覆蓋或宣稱已隨本 plugin 安裝，也不要另造一套 setup-zetero。
 
-Codex 若支援 plugin 安裝，可使用 `.codex-plugin/plugin.json` 載入同一份八個 skills、MCP 與 Codex hooks；僅複製 User skills 不會載入 plugin hooks。安裝助手須依 [hooks 指南](hooks.md) 核對 host 支援、載入結果及必要信任介面，不繞過信任。
+Codex 若支援 plugin 安裝，可使用 `.codex-plugin/plugin.json` 載入同一份九個 skills、MCP 與 Codex hooks；僅複製 User skills 不會載入 plugin hooks。安裝助手須依 [hooks 指南](hooks.md) 核對 host 支援、載入結果及必要信任介面，不繞過信任。
 
 ## 3. 準備 runtime 與 MCP
 
@@ -86,3 +87,5 @@ python .agents/skills/pico-literature-search/scripts/literature_tool.py plan --o
 ```
 
 最後一條只驗證內建 GSEOH 範例的離線策略輸出，不能當作研究者題目已搜尋。使用新的輸出位置避免覆蓋；真實搜尋與 PDF 依需求做有界檢查，詳見 [Cloud 指南](../docs/codex-cloud-literature.md)。確認 HTML、表格列數、PDF 實際可讀及來源相符。記錄來源 commit、安裝目錄、檔案比對、通過／失敗／未跑的檢查、可用工具、未完成能力與重啟需求，再轉入 [研究專案初始化](project-init.md)。
+
+文獻比較含完整 `scripts/` 與 `agents/`，安裝時不可只複製 SKILL.md。完整 plugin 的 openpyxl 由專案依賴安裝；單獨 skill 由助手按該 skill 指引準備，不要求研究者自行處理套件。

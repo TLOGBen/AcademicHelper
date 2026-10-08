@@ -6,6 +6,7 @@
 
 | 研究者需要 | 正式 skill | 主要交付 |
 | --- | --- | --- |
+| 多篇文獻比較與統整 Excel | [lit-comparison](../skills/lit-comparison/SKILL.md) | 五面向比較、交叉缺口、研究啟示與來源重點 |
 | 理解題目與文獻 | [research](../skills/research/SKILL.md) | 研究重點、先讀文獻、來源與證據表 |
 | 選研究方向 | [suggest-direction](../skills/suggest-direction/SKILL.md) | 優先方向、資源取捨、可開始的草案 |
 | 判斷文章用途 | [relevance](../skills/relevance/SKILL.md) | 支持什麼、可放哪裡、適用與不確定性 |

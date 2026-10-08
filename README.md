@@ -10,6 +10,7 @@ AcademicHelper 協助研究者找文獻、整理證據、選研究方向、規�
 
 | 你可以直接說 | 你會拿到 |
 | --- | --- |
+| 幫我比較這幾篇文獻，做成 Excel | 五面向比較表、缺口矩陣、研究啟示與來源定位 |
 | 幫我整理這個題目的文獻 | 研究重點、值得先讀的文獻、有來源的證據表 |
 | 我的資源適合做哪個研究方向？ | 優先方向、取捨與可開始的設計草案 |
 | 這篇文獻可以用在我的研究哪裡？ | 用途、支持依據及適用限制 |
@@ -97,6 +98,7 @@ Claude Code 可透過本 repository 的 marketplace 安裝 `academic-helper` plu
 
 | Skill | 用途 |
 | --- | --- |
+| `lit-comparison` | 有來源的五面向 Excel、交叉缺口矩陣與研究啟示 |
 | `research` | 可追溯的文獻搜尋、評讀與綜合 |
 | `suggest-direction` | 依證據與資源形成研究方向候選 |
 | `relevance` | 判斷構念、族群、版本與用途的適配 |
@@ -106,7 +108,7 @@ Claude Code 可透過本 repository 的 marketplace 安裝 `academic-helper` plu
 | `setup-zetero` | 助手代為連接與檢查 Zotero，必要時引導安全授權 |
 | `zotero-library` | 文庫搜尋、分類與標籤、PDF 註解讀取、AI 筆記與 DOI 書目匯入 |
 
-Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；六個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄；助手可先讀取正式來源並使用其流程，有安裝工具時代為完成對應安裝。名稱相同的本機版本先比對，保留未提交修改，不把目錄搬移或安裝命令交給一般研究者。
+Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；七個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄；助手可先讀取正式來源並使用其流程，有安裝工具時代為完成對應安裝。名稱相同的本機版本先比對，保留未提交修改，不把目錄搬移或安裝命令交給一般研究者。
 
 既有研究 skills 已移除固定年代與強制數字排名，按當下日期設定搜尋範圍，區分題名／摘要／全文、有限搜尋與完整回顧、缺口候選與驗證。COSMIN 按適用的測量特性評讀；引用數與期刊聲望不能替代品質。工具版本及最新規範須從實際來源確認。
 
@@ -172,6 +174,12 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 此 skill 負責環境設定與診斷。0.3.0 新增的 `zotero-library` 與九個 Zotero MCP 工具負責文庫搜尋、分類／標籤、讀取已同步 PDF 註解、AI 筆記／引用註釋及 DOI journalArticle 書目匯入。寫入預設先預覽，保留人工內容並檢查版本衝突。詳見 [Zotero MCP 使用與限制](doc/zotero-mcp.md)。
 
 PDF 註解寫入、附件下載／上傳、其他書目類型的完整入庫仍不在本版 MCP 中；另行安裝的 `zotero-literature-import` 可依其實際能力處理。該 skill 尚未安裝於此 checkout，本次 Cloud 未驗證真實 Zotero 認證或寫入。
+
+## 0.4.0：文獻比較
+
+新增 [lit-comparison](skills/lit-comparison/SKILL.md)，以三張工作表整理五面向比較、交叉缺口與研究啟示，另附可閱讀的重點與來源。助手處理 Python／Excel 依賴並登記成果入口；沒有全文時保留資料不足，不為湊缺口數量編造結論。產生器保護既有檔案、把文字保存為文字，支援超過 26 欄並驗證輸入形狀。
+
+此版 472 項主程式測試通過（含 11 項文獻比較測試），另有 26 項 Zotero、18 項 PICO 離線測試及實際 MCP 連線驗證通過。以明確標示的模擬資料驗證工作簿、文字／公式界線、寬表與不覆蓋行為；不代表已完成真實文獻評讀或視覺渲染。Python wheel 提供 MCP 服務；九個 skills 隨 repository/plugin 安裝，不能只安裝 wheel。
 
 ## 0.3.1 驗證範圍
 

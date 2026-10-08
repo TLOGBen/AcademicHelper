@@ -1,0 +1,4 @@
+interface:
+  display_name: "比較我的文獻"
+  short_description: "將多篇研究整理成有來源的五面向 Excel、缺口矩陣與研究啟示"
+  default_prompt: "使用 $lit-comparison，沿用我的研究題目比較這些文獻。請提供有來源的 Excel 與重點，區分已知證據、缺口候選及資料不足，並放進研究入口。"
