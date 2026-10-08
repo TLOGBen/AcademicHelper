@@ -7,32 +7,19 @@ AcademicHelper 是學術研究輔助工具，提供文獻搜尋、研究缺口�
 建議使用 Python 3.12 與 [uv](https://docs.astral.sh/uv/)。從 repository 根目錄執行；Cloud task 已隔離，直接使用現有 checkout，除非明確需要，不另建 Git worktree。
 
 ```sh
-uv venv --python 3.12
-uv pip install -e . "mcp==1.30.0" "pytest==8.4.2" "pytest-asyncio==0.23.8"
-uv run --no-sync python -m pytest -q
+uv sync --python 3.12 --group dev
+uv run python -m pytest -q
 ```
 
-這組版本已在 Cloud 驗證。程式使用 MCP 1.x 的 FastMCP 介面；目前 `pyproject.toml` 的版本下限會讓一般 `uv sync`／`uv run` 解析至不相容的 MCP 2.x。開發與啟動請使用上述安裝方式及 `--no-sync`，保留已驗證的環境。測試使用 mock，不需要外部 API key。
+程式使用 MCP 1.x 的 FastMCP 介面，依賴已限制為 `mcp>=1.30.0,<2`，避免解析至不相容的 MCP 2.x。開發依賴由 `dev` group 安裝；測試使用 mock，不需要外部 API key。Cloud 的已準備環境另保留經雜湊驗證的依賴清單，可使用 `--no-sync` 避免重新解析。
 
 ## 啟動 MCP
 
 ```sh
-uv run --no-sync academic-helper
+uv run academic-helper
 ```
 
-這是 stdio 服務，需由 MCP client 保持 stdin/stdout 連線，沒有網頁、資料庫、監聽 port 或 localhost preview。client 的工作目錄需指向此 repository。
-
-現有 `.mcp.json` 使用 `uv run academic-helper`。啟動 client 前，將 `UV_NO_SYNC` 傳入其程序環境：
-
-```sh
-# Bash
-export UV_NO_SYNC=true
-```
-
-```powershell
-# PowerShell
-$env:UV_NO_SYNC = "true"
-```
+這是 stdio 服務，需由 MCP client 保持 stdin/stdout 連線，沒有網頁、資料庫、監聽 port 或 localhost preview。Claude plugin 的 `.mcp.json` 使用 `uv run --directory ${CLAUDE_PLUGIN_ROOT} academic-helper`，可從不同工作目錄啟動；其他 MCP client 請將變數換成實際 repository 絕對路徑，或直接執行已安裝的 `academic-helper`。
 
 | MCP 工具 | 用途 |
 | --- | --- |
@@ -40,12 +27,30 @@ $env:UV_NO_SYNC = "true"
 | `deep_search` | 以 DOI 搜尋相關論文；目前實作尚未逐層遍歷引用圖 |
 | `expand_topics` | 產生相關查詢字串，不使用網路 |
 | `find_gaps` | 依分析模式建立研究缺口候選 |
-| `evaluate_paper_tool` | 建立委員、評分維度與 rubric |
-| `prepare_review_context` | 預取文獻並建立評審上下文 |
+| `evaluate_paper_tool` | 建立委員、完整角色 prompt、評估維度與 rubric，不自動評分 |
+| `prepare_review_context` | 預取文獻並建立含待評文章的評審上下文 |
 
 啟動驗證應完成 MCP initialize、列出上述工具，並成功呼叫 `expand_topics`。Cloud 設定時已驗證這個流程。
 
-`evaluate_paper_tool` 與 `prepare_review_context` 目前仍有 repository 問題：程式預期的 `src/academic_helper/agents/` 不存在，根目錄 `agents/*.md` 也缺少 loader 要求的 `focus`、`scoring_dimensions`、`prompt_template`。需要另外修正路徑與資料格式；測試中的 mock 不代表這兩個工具可使用現有檔案運作。
+八份 `agents/*.md` 是角色設定的正式來源：YAML 提供 focus／評估維度，Markdown 本文作為 prompt。checkout 載入與工作目錄無關，wheel 也包含相同角色。`committee-review` 使用工具回傳的 prompt；有子代理時獨立分工，無子代理時循序分析並標明流程。評審結果是模擬建議，不代表真實委員認可或標準化品質評級。
+
+## Skills 與安裝
+
+Claude Code 可透過本 repository 的 marketplace 安裝 `academic-helper` plugin，或在本機 checkout 使用 `claude --plugin-dir /absolute/path/to/AcademicHelper`。需先安裝 uv；MCP 會使用 plugin 目錄解析 Python 依賴。manifest 保留預設 `skills/`，另載入 `.agents/skills/` 中的兩個 skills，不複製另一套來源。
+
+| Skill | 用途 |
+| --- | --- |
+| `research` | 可追溯的文獻搜尋、評讀與綜合 |
+| `suggest-direction` | 依證據與資源形成研究方向候選 |
+| `relevance` | 判斷構念、族群、版本與用途的適配 |
+| `can-this-work` | 研究方法、招募、權限、資源與時程的可行性 |
+| `committee-review` | 有證據與限制的多角色口試模擬 |
+| `pico-literature-search` | 資料庫策略、PMC 全文與閱讀清單 |
+| `setup-zetero` | Zotero 環境變數與唯讀連線診斷 |
+
+Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；五個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄。名稱相同的本機版本先比對，保留未提交修改。
+
+既有研究 skills 已移除固定年代與強制數字排名，按當下日期設定搜尋範圍，區分題名／摘要／全文、有限搜尋與完整回顧、缺口候選與驗證。COSMIN 按適用的測量特性評讀；引用數與期刊聲望不能替代品質。工具版本及最新規範須從實際來源確認。
 
 ## 外部文獻來源
 
@@ -64,7 +69,7 @@ uv run --no-sync python -m unittest discover -s .agents/skills/pico-literature-s
 uv run --no-sync python .agents/skills/pico-literature-search/scripts/literature_tool.py plan --out outputs/plan_check
 ```
 
-詳見 [Cloud 安裝與驗證](docs/codex-cloud-literature.md)。離線 plan／模擬匯出不等於已執行資料庫搜尋。搬移 manifest 或刪除 PDF 後，先核對檔案路徑；目前 rank 仍會將非空 pdf_path 視為已有全文，可能漏列待取得全文項目。
+詳見 [Cloud 安裝與驗證](docs/codex-cloud-literature.md)。離線 plan／模擬匯出不等於已執行資料庫搜尋。rank 會核對 PDF 是否實際可讀且檔頭有效；搬移或刪除後失效的路徑會保留為 `pdf_missing_path`，文章回到待取得清單。manifest 的相對 PDF 路徑依輸出目錄解析。
 
 ## Zotero 環境設定 skill
 
@@ -96,3 +101,7 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 若需要安裝至本機 User scope，從同一個已確認的 branch／commit 複製完整 `setup-zetero` 資料夾至 `~/.codex/skills/setup-zetero`。先比對已存在的版本並保留本機修改與其他 skills；不要附帶憑證、個人 library 值或設定檔。
 
 此 skill 負責環境設定與診斷。文獻匯入、PDF 入庫、評讀及 Excel 匯出由另一個聊天維護的 `zotero-literature-import` 工作流程處理；該 skill 尚未安裝於此 checkout，也尚未在這個 Cloud 驗證 Zotero 認證或匯入。
+
+## 0.2.0 驗證範圍
+
+2026-10-08 的更新通過 400 項主程式測試、20 項 Zotero 與 13 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。

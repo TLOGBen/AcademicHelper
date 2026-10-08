@@ -3,7 +3,7 @@
     "academic-helper": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "academic-helper"]
+      "args": ["run", "--directory", "${CLAUDE_PLUGIN_ROOT}", "academic-helper"]
     }
   }
 }

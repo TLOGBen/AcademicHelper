@@ -2,7 +2,15 @@
 
 ## 位置和依賴
 
-Python helper 只用 standard library。Excel 用 `export_excel.mjs` 與 bundled artifact-tool；`load_workspace_dependencies` 找 Python、Node、packages。本機 resolver 有 primary runtime 預設；其它 host 可設 `CODEX_NODE` 實際 Node、`CODEX_NODE_MODULES` node_modules 或父目錄，不改 runtime。
+Python helper 只用 standard library。Excel 用 `export_excel.mjs` 與 bundled artifact-tool；`load_workspace_dependencies` 可用時查 Python、Node、packages。沒有此工具時，Bash 用 `command -v python3`／`command -v python` 和 `command -v node`，PowerShell 用 `Get-Command python,node`。沿用可用 runtime；必要時設定 `CODEX_NODE` 為實際 Node 執行檔、`CODEX_NODE_MODULES` 為實際 node_modules 或父目錄，不猜固定安裝位置、不改 runtime。
+
+設定實際 package 路徑後，先用選定的 Node 驗證解析：
+
+```text
+<node> -e "console.log(require.resolve('@oai/artifact-tool', {paths:[process.env.CODEX_NODE_MODULES]}))"
+```
+
+解析成功後才執行 Excel 匯出；缺 Node／artifact-tool 時先完成 Python、JSON／CSV 與搜尋策略，明列 Excel 尚未完成，不因缺少依賴探索工具而停止獨立工作。
 
 在研究工作區執行，或設 `LITERATURE_WORKSPACE`。`local_pdf` 相對於該工作區，亦可絕對路徑。`--out` 指工作成果目錄，不用安裝的 skill。run 遇既有 manifest 停止以保筆記；import 更新既有目錄。
 
@@ -48,6 +56,8 @@ PMCID 用 ListObjectsV2 prefix `PMC<id>.` delimiter `/` 找 article-version，�
 manifest.json 含完整摘要；文獻清單.csv 是 UTF-8 BOM；文獻清單.xlsx 有文獻清單／搜尋紀錄，執行 rank 後另加待取得全文頁；另有搜尋式.html、pdfs/。PMID／DOI／PMCID 為文字，年為數值，摘要前 240 字標節錄，最後三欄供篩選和筆記。
 
 `rank --config <profile.json> --out <existing-output-dir> --top 20` 批次以 DOI 查 OpenAlex 引用次數，輸出待取得全文 JSON 及 Excel 的待取得全文頁；不自動評 COSMIN。引用 API 可選 OPENALEX_API_KEY，不保存 key。新輸出 XLSX 檔名為 `文獻清單.xlsx`。
+
+既有 `pdf_path` 必須指向實際可讀且檔頭有效的 PDF；manifest 中的相對路徑依 `--out` 目錄解析，profile 的 `local_pdf` 仍依研究工作區解析。搬移成果後先核對／更新路徑；失效的舊路徑保留為 `pdf_missing_path`，該篇回到待取得清單，不以非空路徑當作已有全文。
 
 去重先 PMID 再 DOI，無共同識別碼才看一致題名、年份。不同識別碼／年份或缺資料保留人工判斷。來源和查詢可回溯，不刪同研究不同報告。
 

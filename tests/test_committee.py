@@ -195,7 +195,7 @@ class TestPrepareReviewContext:
 
     @pytest.mark.asyncio
     async def test_papers_slim_format(self, sample_agent_spec):
-        """Related papers are slimmed to title + abstract only."""
+        """Related papers retain content and identifiers without unrelated fields."""
         from unittest.mock import AsyncMock, patch
 
         from academic_helper.tools.committee import prepare_review_context
@@ -231,11 +231,14 @@ class TestPrepareReviewContext:
             result = await prepare_review_context("Test", "Abstract")
 
         paper = result["papers"][0]
-        assert set(paper.keys()) == {"title", "abstract"}
+        assert paper == {
+            "title": "P1", "abstract": "A1", "doi": "10.1/x",
+            "year": 2024, "source": "s", "url": None,
+        }
 
     @pytest.mark.asyncio
     async def test_committee_member_format(self, sample_agent_spec):
-        """Committee members have name, display_name, focus."""
+        """Committee members include their dispatch prompt and scoring dimensions."""
         from unittest.mock import AsyncMock, patch
 
         from academic_helper.tools.committee import prepare_review_context
@@ -258,7 +261,11 @@ class TestPrepareReviewContext:
             result = await prepare_review_context("Test", "Abstract")
 
         member = result["committee_members"][0]
-        assert set(member.keys()) == {"name", "display_name", "focus"}
+        assert set(member.keys()) == {
+            "name", "display_name", "focus", "prompt_template", "scoring_dimensions"
+        }
+        assert member["prompt_template"] == sample_agent_spec.prompt_template
+        assert member["scoring_dimensions"] == list(sample_agent_spec.scoring_dimensions)
 
     def test_is_async(self):
         """prepare_review_context is an async function."""

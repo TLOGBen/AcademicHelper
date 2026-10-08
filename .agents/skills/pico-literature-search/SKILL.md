@@ -28,7 +28,7 @@ PubMed 與 E-utilities `db=pubmed` 是同一來源，合併去重。Cochrane 的
 
 ## 執行與取得 PDF
 
-讀 [references/execution.md](references/execution.md) 取得 schema、命令及支援界線。用 `load_workspace_dependencies` 找 bundled Python／Node；成果存目前工作區 `outputs/`，不寫入已安裝 skill。
+讀 [references/execution.md](references/execution.md) 取得 schema、命令及支援界線。`load_workspace_dependencies` 可用時用來找 bundled Python／Node；沒有此工具時用 shell 查 Python／Node 與實際 runtime，不因此停止。Excel 匯出前驗證 `@oai/artifact-tool` 可解析，必要時設定 `CODEX_NODE`／`CODEX_NODE_MODULES`。成果存目前工作區 `outputs/`，不寫入已安裝 skill。
 
 將本次 profile 存在工作區，執行 helper：
 

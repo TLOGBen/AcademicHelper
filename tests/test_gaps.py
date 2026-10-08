@@ -303,7 +303,7 @@ class TestGapPipelineABC:
 
         import asyncio
 
-        asyncio.get_event_loop().run_until_complete(pipeline.run(paper, NURSING_TW))
+        asyncio.run(pipeline.run(paper, NURSING_TW))
 
         assert call_order == ["hypothesize", "search", "verify"], (
             f"Expected [hypothesize, search, verify], got {call_order}"

@@ -1,9 +1,13 @@
 {
   "name": "academic-helper",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Academic research assistant — literature search, gap discovery, content evaluation for thesis writing",
   "author": {
     "name": "TLOGBen"
   },
-  "repository": "https://github.com/TLOGBen/AcademicHelper"
+  "repository": "https://github.com/TLOGBen/AcademicHelper",
+  "skills": [
+    "./.agents/skills/pico-literature-search",
+    "./.agents/skills/setup-zetero"
+  ]
 }

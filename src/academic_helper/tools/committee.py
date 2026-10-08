@@ -5,6 +5,7 @@ from __future__ import annotations
 from academic_helper.models.committee import ReviewContext
 from academic_helper.tools.evaluate import (
     AGENTS_DIR,
+    agent_review_metadata,
     domain_profile_for,
     load_all_agents,
     select_committee,
@@ -30,13 +31,15 @@ async def prepare_review_context(
     query = f"{paper_title} {paper_abstract[:200]}"
     raw_papers = await search_papers(query, limit=5)
     papers_slim = [
-        {"title": p["title"], "abstract": p["abstract"]} for p in raw_papers
+        {
+            "title": p["title"],
+            "abstract": p["abstract"],
+            **{key: p[key] for key in ("doi", "url", "year", "source") if key in p},
+        }
+        for p in raw_papers
     ]
 
-    members = [
-        {"name": a.name, "display_name": a.display_name, "focus": a.focus}
-        for a in committee
-    ]
+    members = [agent_review_metadata(a) for a in committee]
 
     rubric = {a.name: a.scoring_dimensions for a in committee}
 
@@ -47,7 +50,10 @@ async def prepare_review_context(
         domain=domain,
         concern=concern,
     )
-    return context.to_dict()
+    result = context.to_dict()
+    result["paper_title"] = paper_title
+    result["paper_abstract"] = paper_abstract
+    return result
 
 
 def register(mcp) -> None:

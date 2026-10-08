@@ -316,6 +316,37 @@ def pdf_bytes_ok(data):
     return len(data) > 100 and data[:1024].lstrip().startswith(b"%PDF-")
 
 
+def existing_pdf_path(record, out=None):
+    """Return a readable PDF, resolving manifest paths beside the manifest."""
+    candidates = []
+    if record.get("local_pdf"):
+        candidates.append((record["local_pdf"], ROOT))
+    if record.get("pdf_path"):
+        candidates.append((record["pdf_path"], Path(out) if out is not None else ROOT))
+    for value, base in candidates:
+        try:
+            path = Path(value)
+            path = path if path.is_absolute() else base / path
+            if path.is_file():
+                with path.open("rb") as file:
+                    if pdf_bytes_ok(file.read(1024)):
+                        return path.resolve()
+        except (OSError, TypeError, ValueError):
+            continue
+    return None
+
+
+def refresh_pdf_paths(records, out):
+    """Keep usable paths and retain stale locations without marking them ready."""
+    for record in records:
+        existing = existing_pdf_path(record, out)
+        if existing is not None:
+            record["pdf_path"] = str(existing)
+        elif record.get("pdf_path"):
+            record["pdf_missing_path"] = record.pop("pdf_path")
+            record["pdf_status"] = "本地 PDF 不存在、不可讀或檔頭無效，待重新取得"
+
+
 def download_pmc(r, client, out):
     pmcid = r["pmcid"]
     if not re.fullmatch(r"PMC\d+", pmcid):
@@ -354,12 +385,13 @@ def download_pmc(r, client, out):
 
 def prepare_pdfs(records, client, out, limit):
     attempts = 0
+    refresh_pdf_paths(records, out)
     for r in records:
         r.setdefault("fulltext_url", "https://pmc.ncbi.nlm.nih.gov/articles/" + r["pmcid"] + "/" if r.get("pmcid") else ("https://doi.org/" + r["doi"] if r.get("doi") else r.get("url", "")))
-        local = ROOT / r.get("local_pdf", "") if r.get("local_pdf") else None
-        if local and local.is_file() and pdf_bytes_ok(local.read_bytes()):
-            r.update(pdf_status="已有本地 PDF（先前取得）", pdf_path=str(local.resolve()), pdf_sha256=hashlib.sha256(local.read_bytes()).hexdigest())
-        elif r.get("pdf_path") and Path(r["pdf_path"]).is_file() and pdf_bytes_ok(Path(r["pdf_path"]).read_bytes()):
+        existing = existing_pdf_path(r, out)
+        if existing is not None:
+            if r.get("local_pdf"):
+                r.update(pdf_status="已有本地 PDF（先前取得）", pdf_path=str(existing), pdf_sha256=hashlib.sha256(existing.read_bytes()).hexdigest())
             continue
         elif r.get("pmcid") and attempts < limit:
             attempts += 1
@@ -402,7 +434,7 @@ def export(out, cfg, records, logs, plan):
         writer.writerows([("'" + v if isinstance(v, str) and v.startswith(("=", "+", "-", "@")) else v) for v in record_row(i, r)] for i, r in enumerate(records, 1))
     node = os.environ.get("CODEX_NODE") or shutil.which("node")
     bundled = Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe"
-    if bundled.exists():
+    if not node and bundled.exists():
         node = str(bundled)
     if not node:
         print("Excel 匯出未完成：找不到 Node。JSON 與 CSV 已保存。", flush=True)
@@ -413,7 +445,7 @@ def export(out, cfg, records, logs, plan):
 
 def enrich_citations(records, client, out):
     """Match exact DOIs only; missing coverage and request failures are not zero."""
-    targets = [r for r in records if not r.get("pdf_path") and r.get("doi")]
+    targets = [r for r in records if existing_pdf_path(r, out) is None and r.get("doi")]
     by_doi = {norm_doi(r["doi"]): r for r in targets}
     dois = list(by_doi)
     for offset in range(0, len(dois), 50):
@@ -439,12 +471,12 @@ def enrich_citations(records, client, out):
                 by_doi[doi].update(citation_status="引用數取得失敗（非零引用）", citation_error=str(exc), citation_checked_at=checked)
         print(f"引用數查核：{min(offset + 50, len(dois))}/{len(dois)} DOI", flush=True)
     for r in records:
-        if not r.get("pdf_path"):
+        if existing_pdf_path(r, out) is None:
             r.setdefault("citation_status", "缺 DOI，待人工核對標題與年份")
             r.setdefault("quality_status", "尚未取得全文，COSMIN 待評；不以引用數推定品質")
 
 
-def missing_pdf_priority(records, limit=20, quality_property="", core_terms=None):
+def missing_pdf_priority(records, limit=20, quality_property="", core_terms=None, out=None):
     core_terms = [t.casefold() for t in (core_terms if core_terms is not None else ["GSEOH"]) if t.strip()]
     def core_record(record):
         text = " ".join(str(record.get(k, "")) for k in ("title", "abstract", "kind")).casefold()
@@ -456,7 +488,7 @@ def missing_pdf_priority(records, limit=20, quality_property="", core_terms=None
     def quality_key(record):
         a = comparable_assessment(record)
         return (0, order[a["rating"].casefold()]) if a else (1, 0)
-    unavailable = [r for r in records if not r.get("pdf_path")]
+    unavailable = [r for r in records if existing_pdf_path(r, out) is None]
     unavailable.sort(key=lambda r: (0 if core_record(r) else 1, *quality_key(r), r.get("citation_count") is None,
                                      -(r.get("citation_count") or 0), -(r.get("year") or 0)))
     rows = []
@@ -566,8 +598,9 @@ def main():
             parser.error("rank 須以 --out 指定已有 manifest 的搜尋目錄")
         payload = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
         records = payload["records"]
+        refresh_pdf_paths(records, out)
         enrich_citations(records, Client(out / "raw"), out)
-        priority = missing_pdf_priority(records, args.top, args.quality_property, cfg.get("instrument_terms", []))
+        priority = missing_pdf_priority(records, args.top, args.quality_property, cfg.get("instrument_terms", []), out=out)
         save_json(out / "待取得全文優先清單.json", priority)
         cfg["missing_pdf_priority"] = priority
         cfg["ranking_note"] = "指定核心文獻保留；同一指定特性的已評組按品質排序，其餘依同來源引用次數規劃取得。無可靠全文評估者 COSMIN 待評，不宣稱品質最高。"

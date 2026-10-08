@@ -2,8 +2,9 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority
+from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority, enrich_citations, refresh_pdf_paths, prepare_pdfs
 
 
 class ToolTests(unittest.TestCase):
@@ -77,6 +78,67 @@ class ToolTests(unittest.TestCase):
         self.assertEqual(ranked[1]['scope'],'研究問題候選（需篩選）')
         generic = missing_pdf_priority(records,core_terms=[])
         self.assertTrue(all(r['scope']=='研究問題候選（需篩選）' for r in generic))
+
+    def test_deleted_pdf_returns_to_pending_and_preserves_previous_location(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            pdf = Path(folder) / 'deleted.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            record = dict(title='Retained paper', pdf_path=str(pdf), pdf_status='已下載（PMC 官方雲端）')
+            self.assertEqual(missing_pdf_priority([record], out=folder), [])
+            pdf.unlink()
+            refresh_pdf_paths([record], Path(folder))
+            self.assertNotIn('pdf_path', record)
+            self.assertEqual(record['pdf_missing_path'], str(pdf))
+            self.assertIn('待重新取得', record['pdf_status'])
+            self.assertEqual(missing_pdf_priority([record], out=folder)[0]['title'], 'Retained paper')
+
+    def test_relative_manifest_pdf_is_resolved_from_output_not_workspace(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder, tempfile.TemporaryDirectory(dir=Path.cwd()) as unrelated:
+            out = Path(folder)
+            (out / 'pdfs').mkdir()
+            pdf = out / 'pdfs' / 'retained.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            record = dict(title='Moved output', pdf_path='pdfs/retained.pdf')
+            with patch('literature_tool.ROOT', Path(unrelated)):
+                self.assertEqual(missing_pdf_priority([record], out=out), [])
+                prepare_pdfs([record], None, out, 0)
+            self.assertEqual(record['pdf_path'], str(pdf.resolve()))
+
+    def test_invalid_pdf_path_is_included_in_pending(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            fake = Path(folder) / 'blocked.pdf'
+            fake.write_bytes(b'<html>not a PDF</html>')
+            record = dict(title='Blocked download', pdf_path=str(fake))
+            self.assertEqual(len(missing_pdf_priority([record], out=folder)), 1)
+
+    def test_citation_enrichment_checks_missing_file_not_only_path_string(self):
+        class Client:
+            def get(self, url, params):
+                self.params = params
+                return json.dumps({'results': [{'id': 'https://openalex.org/W1', 'doi': 'https://doi.org/10.123/missing', 'cited_by_count': 7}]})
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            (out / 'raw').mkdir()
+            retained = out / 'retained.pdf'
+            retained.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            records = [dict(title='Missing', doi='10.123/missing', pdf_path='deleted.pdf'),
+                       dict(title='Retained', doi='10.123/retained', pdf_path='retained.pdf')]
+            client = Client()
+            enrich_citations(records, client, out)
+            self.assertEqual(client.params['filter'], 'doi:10.123/missing')
+            self.assertEqual(records[0]['citation_count'], 7)
+            self.assertNotIn('citation_status', records[1])
+
+    def test_local_pdf_still_resolves_from_research_workspace(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as workspace, tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            pdf = Path(workspace) / 'source.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            record = dict(title='User file', local_pdf='source.pdf')
+            with patch('literature_tool.ROOT', Path(workspace)):
+                self.assertEqual(missing_pdf_priority([record], out=folder), [])
+                prepare_pdfs([record], None, Path(folder), 0)
+            self.assertEqual(record['pdf_path'], str(pdf.resolve()))
+            self.assertEqual(record['pdf_status'], '已有本地 PDF（先前取得）')
 
 
 if __name__ == '__main__':

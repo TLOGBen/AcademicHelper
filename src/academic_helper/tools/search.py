@@ -78,7 +78,10 @@ def _paper_to_dict(paper: Paper) -> dict:
 
 
 async def search_papers(query: str, limit: int = 10) -> list[dict]:
-    """Search across all sources, deduplicate by DOI, and return paper dicts."""
+    """Fetch up to limit papers per source and deduplicate by DOI.
+
+    Failed sources are omitted; an empty list does not establish zero matches.
+    """
     sources = get_all_sources()
     results = await search_all(sources, query, limit)
 
@@ -92,9 +95,9 @@ async def search_papers(query: str, limit: int = 10) -> list[dict]:
 
 
 async def deep_search(paper_doi: str, depth: int = 1) -> list[dict]:
-    """Traverse the citation network starting from paper_doi.
+    """Search for a DOI string with a per-source limit of 10 * depth.
 
-    The seed paper (paper_doi) is excluded from the returned results.
+    Excludes the seed DOI. This does not traverse references or citation edges.
     """
     sources = get_all_sources()
     results = await search_all(sources, paper_doi, 10 * depth)
