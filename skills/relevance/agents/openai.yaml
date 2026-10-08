@@ -1,0 +1,4 @@
+interface:
+  display_name: "這篇文獻可以怎麼用"
+  short_description: "判斷文獻與研究問題的關係、可用位置及仍需查核的證據"
+  default_prompt: "使用 $relevance，幫我判斷這篇文獻能在我的研究中怎麼用。請沿用已有研究問題，直接給用途、主要依據與限制，缺資料先由你補查。"

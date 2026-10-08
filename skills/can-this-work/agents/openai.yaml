@@ -1,0 +1,4 @@
+interface:
+  display_name: 幫我評估研究能否執行
+  short_description: 提出符合資源的最低可行方案，整理執行條件和下一步的建議
+  default_prompt: 使用 $can-this-work，幫我評估這個研究想法能不能執行。請先給可行性結論和最低可行方案，由你完成可用的補查，只問必須由我決定的條件。

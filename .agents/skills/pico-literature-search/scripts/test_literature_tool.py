@@ -3,11 +3,77 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from html.parser import HTMLParser
 
-from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority, enrich_citations, refresh_pdf_paths, prepare_pdfs, record_row
+from literature_tool import make_plan, write_plan, merge_records, parse_pubmed, parse_ris, s3_https, pdf_bytes_ok, missing_pdf_priority, enrich_citations, refresh_pdf_paths, prepare_pdfs, record_row, write_reading_start, export
 
 
 class ToolTests(unittest.TestCase):
+    def reading_links(self, text):
+        class Links(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.hrefs = []
+            def handle_starttag(self, tag, attrs):
+                if tag == 'a':
+                    self.hrefs.append(dict(attrs).get('href'))
+        parser = Links()
+        parser.feed(text)
+        return parser.hrefs
+
+    def test_reading_start_links_available_files_and_escapes_article_text(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            (out / 'pdfs').mkdir()
+            pdf = out / 'pdfs' / 'article one.pdf'
+            pdf.write_bytes(b'%PDF-1.7\n' + b'0' * 200)
+            (out / '文獻清單.csv').write_text('offline fixture')
+            (out / '文獻清單.xlsx').write_bytes(b'offline existence fixture')
+            records = [dict(title='<script>not markup</script>', pdf_path='pdfs/article one.pdf')]
+            write_reading_start(out, {'topic': 'Offline review fixture'}, records, [], [], excel_ready=True)
+            page = (out / '開始閱讀.html').read_text()
+            links = self.reading_links(page)
+            self.assertIn('pdfs/article%20one.pdf', links)
+            self.assertIn('%E6%96%87%E7%8D%BB%E6%B8%85%E5%96%AE.xlsx', links)
+            self.assertIn('1 筆全文檔案可用，0 筆待取得全文', page)
+            self.assertNotIn('<script>', page)
+            self.assertIn('&lt;script&gt;not markup&lt;/script&gt;', page)
+            self.assertIn('尚未代表完成納入', page)
+
+    def test_reading_start_reports_partial_search_and_missing_pdf_without_stale_excel(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            (out / '文獻清單.xlsx').write_bytes(b'previous export fixture')
+            records = [dict(title='Missing paper', pdf_path='deleted.pdf', fulltext_url='javascript:alert(1)')]
+            logs = [{'id':'failed', 'database':'PubMed', 'status':'搜尋失敗'},
+                    {'id':'partial', 'database':'PubMed', 'status':'已執行', 'truncated':True}]
+            plan = [{'id':'pending', 'database':'Cochrane', 'status':'尚未執行'}]
+            write_reading_start(out, {'topic':'Offline fixture'}, records, logs, plan)
+            page = (out / '開始閱讀.html').read_text()
+            self.assertEqual(self.reading_links(page), [])
+            self.assertIn('0 筆全文檔案可用，1 筆待取得全文', page)
+            self.assertIn('1 輪搜尋或取回未成功', page)
+            self.assertIn('1 輪搜尋尚未執行', page)
+            self.assertIn('1 輪搜尋只取回部分結果', page)
+            self.assertIn('本次 Excel 匯出尚未完成', page)
+            self.assertNotIn('javascript:', page)
+            records[0]['fulltext_url'] = 'https://['
+            write_reading_start(out, {'topic':'Offline fixture'}, records, logs, plan)
+
+    def test_export_keeps_a_reading_entry_and_csv_when_excel_cannot_start(self):
+        with tempfile.TemporaryDirectory(dir=Path.cwd()) as folder:
+            out = Path(folder)
+            with patch.dict('literature_tool.os.environ', {'CODEX_NODE':'missing-node'}, clear=True), \
+                 patch('literature_tool.subprocess.run', side_effect=FileNotFoundError):
+                success = export(out, {'topic':'Offline fixture','pico':{}},
+                                 [dict(title='Candidate', url='https://example.org/article')], [], [])
+            self.assertFalse(success)
+            self.assertTrue((out / 'manifest.json').is_file())
+            self.assertTrue((out / '文獻清單.csv').is_file())
+            page = (out / '開始閱讀.html').read_text()
+            self.assertIn('https://example.org/article', self.reading_links(page))
+            self.assertIn('本次 Excel 匯出尚未完成', page)
+
     def test_pubmed_structured_date_identifiers_and_abstract(self):
         xml = b'''<PubmedArticleSet><PubmedArticle><MedlineCitation><PMID>123</PMID><Article><ArticleTitle>A <i>scale</i> study</ArticleTitle><Journal><Title>Journal</Title><JournalIssue><PubDate><Year>2017</Year><Month>Oct</Month></PubDate></JournalIssue></Journal><Abstract><AbstractText Label="METHODS">Measure</AbstractText></Abstract><AuthorList><Author><LastName>Ohara</LastName><Initials>Y</Initials></Author></AuthorList></Article></MedlineCitation><PubmedData><ArticleIdList><ArticleId IdType="doi">10.1111/ggi.12873</ArticleId><ArticleId IdType="pmc">PMC100</ArticleId></ArticleIdList></PubmedData></PubmedArticle></PubmedArticleSet>'''
         record = parse_pubmed(xml)[0]

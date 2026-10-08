@@ -16,7 +16,7 @@ Python helper 只用 standard library。Excel 用 `export_excel.mjs` 與 bundled
 
 ## 新題目 profile
 
-代理依研究寫 UTF-8 JSON：
+此文件由助手執行，技術細節不作為研究者的操作清單。代理依研究寫 UTF-8 JSON：
 
 ```json
 {
@@ -33,9 +33,20 @@ Python helper 只用 standard library。Excel 用 `export_excel.mjs` 與 bundled
 
 可加 `seed_pmid` 為核實的原文 PMID；自訂 queries 不回退 GSEOH。id 唯一，PubMed database 以 PubMed 開頭。只把 PubMed IDs 傳 `run --queries`，helper 不用 API 執行 Scholar／Cochrane。前三種資料庫 url 可省，其它來源提供 url。
 
-補入資料可含 title、数值 year、authors、journal、doi、pmid、pmcid、url、kind、source、local_pdf，標人工補入／使用者附件／既有檔，不捏造識別碼。原始論文、問卷和研究報告各自標明。
+補入資料可含 title、數值 year、authors、journal、doi、pmid、pmcid、url、kind、source、local_pdf，標人工補入／使用者附件／既有檔，不捏造識別碼。原始論文、問卷和研究報告各自標明。
 
 GSEOH profile 的英文詞彙生成器產生 names、methods_broad、methods_population、translations、community、locale 六輪及 Cochrane／Scholar 詞。換量表時用自訂 queries。
+
+## 助手執行命令
+
+助手產生本次 profile 並執行；不要求研究者自行編輯 JSON 或執行命令：
+
+```text
+<python> <skill>/scripts/literature_tool.py plan --config <profile.json> --out <new-output-dir>
+<python> <skill>/scripts/literature_tool.py run --config <profile.json> --out <new-output-dir> --queries <pubmed-query-ids> --max-per-query <limit> --pdf-limit <limit>
+<python> <skill>/scripts/literature_tool.py import --config <profile.json> --out <existing-output-dir> --ris <export.ris> --source <actual-source> --query-id <actual-query-id>
+```
+
 
 ## 參數和匯入
 
@@ -53,7 +64,7 @@ PMCID 用 ListObjectsV2 prefix `PMC<id>.` delimiter `/` 找 article-version，�
 
 ## 閱讀與匯出
 
-manifest.json 含完整摘要；文獻清單.csv 是 UTF-8 BOM；文獻清單.xlsx 有文獻清單／搜尋紀錄，執行 rank 後另加待取得全文頁；另有搜尋式.html、pdfs/。PMID／DOI／PMCID 為文字，年為數值，摘要前 240 字標節錄，最後三欄供篩選和筆記。
+manifest.json 含完整摘要；文獻清單.csv 是 UTF-8 BOM；文獻清單.xlsx 有文獻清單／搜尋紀錄，執行 rank 後另加待取得全文頁；另有開始閱讀.html、搜尋式.html、pdfs/。閱讀入口會核對實際可用 PDF、連到當次成功匯出的 Excel／已有 CSV，顯示未執行、失敗、截取與待全文狀態；不把候選清單稱為完成納入。PMID／DOI／PMCID 為文字，年為數值，摘要前 240 字標節錄，最後三欄供篩選和筆記。
 
 `rank --config <profile.json> --out <existing-output-dir> --top 20` 批次以 DOI 查 OpenAlex 引用次數，輸出待取得全文 JSON 及 Excel 的待取得全文頁；不自動評 COSMIN。引用 API 可選 OPENALEX_API_KEY，不保存 key。新輸出 XLSX 檔名為 `文獻清單.xlsx`。
 
@@ -64,3 +75,9 @@ manifest.json 含完整摘要；文獻清單.csv 是 UTF-8 BOM；文獻清單.xl
 Excel 手動筆記不反向同步 JSON。匯入前先保留有筆記的 Excel，或用 PMID／DOI 建獨立筆記檔合併。summary.json 是初始 run 摘要，import 後用 manifest／Excel，不拿舊摘要報新數。
 
 新建 XLSX 套用 spreadsheets marker／render／verify。Helper recalculate、inspect、render、export；查看所有工作表預覽及下載 PDF，重新開啟已匯出的 XLSX 確認表格名稱唯一。測試：`<python> -m unittest discover -s <skill>/scripts -p test_literature_tool.py -v`。測試驗證日期／IDs／摘要、RIS 完整性、去重來源、PDF 型別及新題目不套 GSEOH，不能代替真實資料庫驗證。測試暫存目錄設在可寫工作區，不寫入安裝的 skill。
+
+## 面向研究者的交付
+
+主入口使用開始閱讀.html；研究報告另附可用的結論、優先閱讀理由和需作者判斷的項目。資料較多時交付完整成果目錄或可下載的整理包，避免要求研究者自行搬路徑。原始 PDF 位於成果目錄外時，由助手依授權複製需要的檔案到成果目錄並更新記錄／入口，保留原檔；交付前從成果目錄實際開啟連結。外部本地路徑只在原環境有效，不能把它當可攜下載。
+
+重新匯出前先保存既有 Excel 筆記，再核對 manifest 與筆記更新範圍；只有實際合併或確認無需保留後才更新檔案。HTML 閱讀入口與摘要不替代原始全文、搜尋稽核或正式研究判斷。

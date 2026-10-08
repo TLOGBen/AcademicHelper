@@ -1,0 +1,4 @@
+interface:
+  display_name: "幫我找研究方向"
+  short_description: "依現有證據與資源推薦方向，給出可直接討論的設計草案"
+  default_prompt: "使用 $suggest-direction，根據我的題目、現有資料與資源，幫我選合適的研究方向。請先給最值得推進的建議、重要取捨和可開始的下一步。"

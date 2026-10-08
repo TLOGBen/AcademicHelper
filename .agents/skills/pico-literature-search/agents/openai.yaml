@@ -1,4 +1,4 @@
 interface:
-  display_name: "PICO 文獻搜尋與 PDF 整理"
-  short_description: "研究各資料庫搜尋式、取得開放 PDF、匯出 Excel 閱讀清單"
-  default_prompt: "使用 $pico-literature-search，根據我的 PICO 研究 PubMed、Cochrane 與 Google Scholar 搜尋策略，取得可下載 PDF 並整理 Excel。"
+  display_name: "幫我找文獻與整理全文"
+  short_description: "代為研究搜尋策略、取得可用全文，交付可直接閱讀的清單和入口"
+  default_prompt: "使用 $pico-literature-search，幫我依研究問題找文獻並整理全文。請沿用已有資料，由你處理搜尋和工具設定，交付閱讀入口、清單與重要缺項，只問會影響研究範圍的問題。"

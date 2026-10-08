@@ -2,6 +2,8 @@
 
 The skill lives in `.agents/skills/pico-literature-search/`. Repository skills are available in Codex Cloud; personal computer skills are not automatically synced. See [OpenAI Cloud environments](https://learn.chatgpt.com/docs/environments/cloud-environments) and [Build skills](https://learn.chatgpt.com/docs/build-skills).
 
+Researchers can describe their question and ask for literature and a reading list. The assistant chooses the workflow, prepares profiles, runs checks, and handles files. The setup and commands below are for the assistant or maintainer; researchers only need to make research decisions or complete necessary account authorization.
+
 ## Create the environment
 
 1. Choose **Work in > Cloud > Select environment > Create environment**, or open **Settings > Codex Cloud > Environments**.
@@ -46,6 +48,8 @@ python .agents/skills/pico-literature-search/scripts/literature_tool.py rank --o
 
 Cochrane and Scholar strategy generation and RIS import are supported. The helper does not bulk scrape Scholar or automate their website interfaces. The current official Codex Cloud documentation lists browser use as a limitation; use exports or a suitable browser-capable workflow and label any unexecuted sources.
 
-Outputs include `manifest.json`, full abstracts and raw API responses, `文獻清單.csv`, `文獻清單.xlsx`, `搜尋式.html`, and downloaded PDFs. After `rank`, XLSX includes a missing-full-text priority sheet. Keep filled Excel notes before re-export because notes are not synced back to JSON. Save required task outputs explicitly; environment saved state is not durable source control or an archive.
+Outputs include `開始閱讀.html`, `manifest.json`, full abstracts and raw API responses, `文獻清單.csv`, `文獻清單.xlsx`, `搜尋式.html`, and downloaded PDFs. After `rank`, XLSX includes a missing-full-text priority sheet. Keep filled Excel notes before re-export because notes are not synced back to JSON. Save required task outputs explicitly; environment saved state is not durable source control or an archive.
 
 The public GSEOH example contains bibliographic records only. It does not bundle personal correspondence, the Japanese attachment, local PDF paths, credentials, or study data. Supply the relevant translation permission and mother version separately in the task that needs them.
+
+Open `開始閱讀.html` first: it links to the current successful Excel export, available CSV and PDFs, and shows incomplete searches or missing full texts. A failed Excel refresh does not present an older XLSX as the current result. External local PDF paths only work in their original environment; the assistant should prepare a portable deliverable, retain originals, and verify links before handoff.

@@ -422,6 +422,97 @@ def record_row(i, r):
             r.get("license", ""), re.sub(r"\s+", " ", r.get("abstract", ""))[:240], r.get("screening_decision", "未篩選"), r.get("exclusion_reason", ""), r.get("reading_notes", "")]
 
 
+def write_reading_start(out, cfg, records, logs, plan, excel_ready=False):
+    """Provide a researcher-facing entry point using only available artifacts."""
+    out = Path(out).resolve()
+
+    def text(value):
+        return html.escape(str(value) if value is not None else "")
+
+    def link(label, url):
+        return f'<a href="{html.escape(url, quote=True)}">{text(label)}</a>'
+
+    cards = []
+    if excel_ready and (out / "文獻清單.xlsx").is_file():
+        cards.append(link("開啟 Excel 閱讀清單", urllib.parse.quote("文獻清單.xlsx")))
+    if (out / "文獻清單.csv").is_file():
+        cards.append(link("開啟文獻清單（CSV）", urllib.parse.quote("文獻清單.csv")))
+    if (out / "搜尋式.html").is_file():
+        cards.append(link("查看搜尋策略", urllib.parse.quote("搜尋式.html")))
+    available = 0
+    rows = []
+    for record in records:
+        pdf = existing_pdf_path(record, out)
+        if pdf is not None:
+            available += 1
+            try:
+                url = urllib.parse.quote(pdf.relative_to(out).as_posix())
+            except ValueError:
+                url = pdf.as_uri()
+            action = link("閱讀 PDF", url)
+            state = "全文檔案可用（仍需核對內容與版本）"
+        else:
+            url = record.get("fulltext_url") or record.get("url") or ""
+            if not isinstance(url, str):
+                url = ""
+            try:
+                parsed = urllib.parse.urlsplit(url)
+            except ValueError:
+                parsed = urllib.parse.urlsplit("")
+            action = (link("查看文獻入口", url)
+                      if parsed.scheme in {"https", "http"} and parsed.netloc
+                      else "待查可取得來源")
+            state = "待取得全文"
+        note = record.get("reading_notes")
+        notes = f'<details><summary>閱讀筆記</summary><p>{text(note)}</p></details>' if note else ""
+        rows.append(f'<tr><td>{text(record.get("title"))}{notes}</td>'
+                    f'<td>{text(record.get("year"))}</td><td>{state}</td>'
+                    f'<td>{text(record.get("screening_decision") or "未篩選")}</td>'
+                    f'<td>{action}</td></tr>')
+    executed = {log.get("id") for log in logs}
+    pending = [item for item in plan if item.get("id") not in executed]
+    failed = sum("失敗" in log.get("status", "") for log in logs)
+    truncated = sum(bool(log.get("truncated")) for log in logs)
+    notices = []
+    if failed:
+        notices.append(f"{failed} 輪搜尋或取回未成功，候選清單可能不完整。")
+    if pending:
+        notices.append(f"{len(pending)} 輪搜尋尚未執行，尚不能視為完整回顧。")
+    if truncated:
+        notices.append(f"{truncated} 輪搜尋只取回部分結果。")
+    if any(log.get("warnings") for log in logs):
+        notices.append("部分搜尋有警告，需核對其對涵蓋範圍的影響。")
+    if not excel_ready:
+        notices.append("本次 Excel 匯出尚未完成；可先使用已有清單與全文。")
+    if not records:
+        notices.append("目前沒有可閱讀的候選文獻；不能由此推論沒有相關研究。")
+    checks = []
+    for item in logs + pending:
+        checks.append('<li>' + text(item.get("database") or "來源待確認") + '：'
+                      + text(item.get("label") or item.get("id") or "搜尋紀錄") + ' — '
+                      + text(item.get("status") if item in logs else "尚未執行") + '</li>')
+    body = f'''<!doctype html><html lang="zh-Hant"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>開始閱讀 — {text(cfg.get("topic"))}</title>
+<style>body{{font-family:system-ui,sans-serif;background:#f5f7f6;color:#243b3b;margin:0}}
+main{{max-width:1100px;margin:auto;padding:32px 20px}}h1{{line-height:1.4}}
+nav{{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0}}a{{color:#17696b}}
+nav a{{background:white;padding:14px 18px;border:1px solid #ccdada;border-radius:8px}}
+.notice{{background:#fff4d8;padding:16px;border-radius:8px}}table{{border-collapse:collapse;width:100%;background:white}}
+th,td{{text-align:left;padding:14px;border-bottom:1px solid #dce5e1;vertical-align:top}}th{{background:#e7efec}}
+.table{{overflow-x:auto}}details{{margin:20px 0}}td details{{margin:10px 0;font-size:.9em}}td p{{white-space:pre-wrap}}
+</style><main><h1>開始閱讀</h1><p>{text(cfg.get("topic"))}</p>
+<p>已整理 {len(records)} 筆候選文獻；{available} 筆全文檔案可用，{len(records) - available} 筆待取得全文。</p>
+<p>先打開閱讀清單或下方全文，記下與研究問題的關係。這是候選清單，尚未代表完成納入、全文評讀或品質評級。</p>
+<nav>{' '.join(cards)}</nav>
+{('<div class="notice">' + '<br>'.join(notices) + '</div>') if notices else ''}
+<h2>候選閱讀清單</h2><div class="table"><table><thead><tr><th>文章</th><th>年份</th><th>全文</th><th>篩選決定</th><th>開啟</th></tr></thead>
+<tbody>{''.join(rows)}</tbody></table></div>
+<details><summary>查看本次搜尋範圍與進度</summary><ul>{''.join(checks)}</ul></details>
+</main></html>'''
+    (out / "開始閱讀.html").write_text(body, encoding="utf-8")
+
+
 def export(out, cfg, records, logs, plan):
     if "GSEOH" not in cfg.get("instrument_terms", []):
         for record in records:
@@ -437,14 +528,20 @@ def export(out, cfg, records, logs, plan):
         writer = csv.writer(f)
         writer.writerow(HEADERS)
         writer.writerows([("'" + v if isinstance(v, str) and v.startswith(("=", "+", "-", "@")) else v) for v in record_row(i, r)] for i, r in enumerate(records, 1))
+    write_reading_start(out, cfg, records, logs, plan)
     node = os.environ.get("CODEX_NODE") or shutil.which("node")
     bundled = Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe"
     if not node and bundled.exists():
         node = str(bundled)
     if not node:
-        print("Excel 匯出未完成：找不到 Node。JSON 與 CSV 已保存。", flush=True)
+        print("Excel 匯出未完成：找不到 Node。閱讀入口、JSON 與 CSV 已保存。", flush=True)
         return False
-    completed = subprocess.run([node, str(HERE / "export_excel.mjs"), str(out / "manifest.json"), str(out / "文獻清單.xlsx")], cwd=HERE)
+    try:
+        completed = subprocess.run([node, str(HERE / "export_excel.mjs"), str(out / "manifest.json"), str(out / "文獻清單.xlsx")], cwd=HERE)
+    except OSError:
+        print("Excel 匯出未完成：無法啟動 Node。閱讀入口、JSON 與 CSV 已保存。", flush=True)
+        return False
+    write_reading_start(out, cfg, records, logs, plan, excel_ready=completed.returncode == 0)
     return completed.returncode == 0
 
 

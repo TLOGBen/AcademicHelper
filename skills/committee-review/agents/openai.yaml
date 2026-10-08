@@ -1,0 +1,4 @@
+interface:
+  display_name: "幫我修稿與練習口試"
+  short_description: "整理優先修改、具體修稿建議與有證據可回答的口試練習題"
+  default_prompt: "使用 $committee-review，幫我審閱研究並準備口試。請沿用已有材料，先給最重要的修改與具體建議，再整理可練習的問題和回答依據。"

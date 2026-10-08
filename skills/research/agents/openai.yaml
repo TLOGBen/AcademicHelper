@@ -1,0 +1,4 @@
+interface:
+  display_name: "幫我整理研究證據"
+  short_description: "整理有來源的研究結論、閱讀順序與可編輯文獻回顧成果"
+  default_prompt: "使用 $research，幫我整理這個研究問題的文獻與證據。請沿用已有題目和資料，先交付研究重點、值得先讀的文獻與成果入口，由你處理搜尋和工具操作。"

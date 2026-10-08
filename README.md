@@ -1,6 +1,22 @@
 # AcademicHelper
 
-AcademicHelper 是學術研究輔助工具，提供文獻搜尋、研究缺口候選與論文評審上下文。Python 服務使用 MCP stdio；`agents/` 與 `skills/` 另提供評審角色與操作指引。MCP 工具本身不呼叫 LLM。
+AcademicHelper 協助研究者找文獻、整理證據、選研究方向、規劃設計與準備口試。直接描述問題或提供文章／附件即可；助手會選擇流程、處理工具與檔案，只在研究判斷或必要授權需要你決定時提問。
+
+## 從研究問題開始
+
+| 你可以直接說 | 你會拿到 |
+| --- | --- |
+| 幫我整理這個題目的文獻 | 研究重點、值得先讀的文獻、有來源的證據表 |
+| 我的資源適合做哪個研究方向？ | 優先方向、取捨與可開始的設計草案 |
+| 這篇文獻可以用在我的研究哪裡？ | 用途、支持依據及適用限制 |
+| 這個研究想法能做嗎？ | 可行性結論、最低可行方案與需確認的條件 |
+| 幫我修論文並練習口試 | 優先修改、修稿建議、問題與回答依據 |
+| 幫我找文獻、整理 PDF 和閱讀清單 | 「開始閱讀」入口、實際可用全文與 Excel／CSV 清單 |
+| 幫我連接 Zotero | 助手完成可用設定與檢查，必要時引導安全授權 |
+
+簡單問題直接回答；較大任務先給結論和成果入口，完整證據與方法紀錄保留供查核。原始文章、摘要與全文閱讀程度清楚標示，重大限制一併說明。跨流程沿用研究題目、文獻、筆記與決定，不需要重填資料或自己排除程式錯誤。詳見 [研究者使用體驗](docs/researcher-experience.md)。
+
+以下是助手與維護者的安裝／執行資訊。Python 服務使用 MCP stdio；`agents/` 與 `skills/` 提供評審角色與流程，MCP 工具本身不呼叫 LLM。
 
 ## 開發環境
 
@@ -46,9 +62,9 @@ Claude Code 可透過本 repository 的 marketplace 安裝 `academic-helper` plu
 | `can-this-work` | 研究方法、招募、權限、資源與時程的可行性 |
 | `committee-review` | 有證據與限制的多角色口試模擬 |
 | `pico-literature-search` | 資料庫策略、PMC 全文與閱讀清單 |
-| `setup-zetero` | Zotero 環境變數與唯讀連線診斷 |
+| `setup-zetero` | 助手代為連接與檢查 Zotero，必要時引導安全授權 |
 
-Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；五個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄。名稱相同的本機版本先比對，保留未提交修改。
+Codex Cloud 自動使用 `.agents/skills/` 中的 repository skills；五個 `skills/` 中的 Claude skills 需由相應 host 載入或依同一 commit 安裝至 Codex skill 目錄；助手可先讀取正式來源並使用其流程，有安裝工具時代為完成對應安裝。名稱相同的本機版本先比對，保留未提交修改，不把目錄搬移或安裝命令交給一般研究者。
 
 既有研究 skills 已移除固定年代與強制數字排名，按當下日期設定搜尋範圍，區分題名／摘要／全文、有限搜尋與完整回顧、缺口候選與驗證。COSMIN 按適用的測量特性評讀；引用數與期刊聲望不能替代品質。工具版本及最新規範須從實際來源確認。
 
@@ -115,4 +131,4 @@ uv run --no-sync python -m unittest discover -s .agents/skills/setup-zetero/scri
 
 ## 0.2.0 驗證範圍
 
-2026-10-08 的更新通過 400 項主程式測試、26 項 Zotero 與 15 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。
+2026-10-08 的更新通過 400 項主程式測試、26 項 Zotero 與 18 項 PICO 離線測試。實際 MCP initialize／列出工具／主題擴展／評審上下文呼叫成功；獨立安裝 wheel 後，也能從專案外載入八個角色並執行評審工具。Excel 曾以明確標示的模擬資料驗證三個工作表與預覽。這些驗證不包含真實資料庫搜尋、Zotero 認證或 PDF 入庫。
